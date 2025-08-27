@@ -70,6 +70,62 @@ export const mockData = {
     }
   ],
   
+  itinerary: [
+    {
+      day: 1,
+      title: "Arrival in Srinagar",
+      description: "Arrive at Srinagar airport, transfer to houseboat, Dal Lake shikara ride, overnight stay",
+      activities: ["Airport Transfer", "Houseboat Check-in", "Dal Lake", "Shikara Ride"]
+    },
+    {
+      day: 2,
+      title: "Srinagar Sightseeing",
+      description: "Visit Mughal Gardens, Shankaracharya Temple, local markets, evening at leisure",
+      activities: ["Nishat Garden", "Shalimar Garden", "Temple Visit", "Shopping"]
+    },
+    {
+      day: 3,
+      title: "Gulmarg Excursion",
+      description: "Day trip to Gulmarg, Gondola ride, snow activities, return to Srinagar",
+      activities: ["Gulmarg", "Gondola Ride", "Snow Activities", "Photography"]
+    },
+    {
+      day: 4,
+      title: "Pahalgam Valley",
+      description: "Drive to Pahalgam, Betaab Valley, Aru Valley, riverside walk, overnight stay",
+      activities: ["Pahalgam", "Betaab Valley", "Aru Valley", "River Walk"]
+    },
+    {
+      day: 5,
+      title: "Sonamarg Day Trip",
+      description: "Visit Sonamarg glacier, pony ride, Thajiwas glacier, return to Srinagar",
+      activities: ["Sonamarg", "Glacier Visit", "Pony Ride", "Nature Walk"]
+    }
+  ],
+
+  inclusions: [
+    "Airport transfers",
+    "Accommodation as per itinerary",
+    "All meals (breakfast, lunch, dinner)",
+    "Transportation in AC vehicle",
+    "Professional tour guide",
+    "Entry tickets to attractions",
+    "Houseboat stay",
+    "Shikara ride",
+    "All taxes and service charges"
+  ],
+
+  exclusions: [
+    "Airfare to/from Srinagar",
+    "Personal expenses",
+    "Tips and gratuities",
+    "Travel insurance",
+    "Additional activities not mentioned",
+    "Laundry charges",
+    "Phone calls",
+    "Alcoholic beverages"
+  ],
+  
   contactInfo: [
     {
       icon: Phone,
