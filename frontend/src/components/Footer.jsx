@@ -33,6 +33,11 @@ const Footer = () => {
               <li><Link to="/book-cab" className="hover:text-amber-400 transition-colors">Book Cab</Link></li>
               <li><Link to="/testimonials" className="hover:text-amber-400 transition-colors">Testimonials</Link></li>
               <li><Link to="/contact" className="hover:text-amber-400 transition-colors">Contact</Link></li>
+              <li className="pt-2 border-t border-slate-600">
+                <Link to="/admin/login" className="text-slate-400 hover:text-amber-400 transition-colors text-sm flex items-center">
+                  <span className="mr-1">🔐</span> Admin Login
+                </Link>
+              </li>
             </ul>
           </div>
 
