@@ -638,5 +638,281 @@ async def reset_site_settings(current_admin: dict = Depends(admin_required)):
         logger.error(f"Reset site settings error: {e}")
         raise HTTPException(status_code=500, detail="Failed to reset site settings")
 
+# Team Management endpoints
+@api_router.post("/team/login", response_model=TokenResponse)
+async def team_login(login_data: TeamLogin):
+    """Team member login endpoint."""
+    try:
+        db = get_database()
+        team_collection = db.team_members
+        
+        # Find team member by username
+        team_member = await team_collection.find_one({"username": login_data.username, "isActive": True})
+        
+        if not team_member or not AuthManager.verify_password(login_data.password, team_member["passwordHash"]):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid username or password"
+            )
+        
+        # Update last login
+        await team_collection.update_one(
+            {"_id": team_member["_id"]},
+            {"$set": {"lastLogin": datetime.utcnow()}}
+        )
+        
+        # Create access token
+        access_token = AuthManager.create_access_token(
+            data={"sub": team_member["username"], "user_id": str(team_member["_id"]), "role": team_member["role"]}
+        )
+        
+        return TokenResponse(access_token=access_token)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Team login error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@api_router.get("/admin/team", response_model=List[TeamMember])
+async def get_team_members(current_admin: dict = Depends(admin_required)):
+    """Get all team members (admin)."""
+    try:
+        db = get_database()
+        team_collection = db.team_members
+        
+        team_cursor = team_collection.find({}).sort("createdAt", -1)
+        team_members = await team_cursor.to_list(length=1000)
+        
+        return [TeamMember(**member) for member in team_members]
+        
+    except Exception as e:
+        logger.error(f"Get team members error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch team members")
+
+@api_router.post("/admin/team", response_model=TeamMember)
+async def create_team_member(team_data: TeamMemberCreate, current_admin: dict = Depends(admin_required)):
+    """Create new team member (admin)."""
+    try:
+        db = get_database()
+        team_collection = db.team_members
+        
+        # Check if username or email already exists
+        existing_member = await team_collection.find_one({
+            "$or": [{"username": team_data.username}, {"email": team_data.email}]
+        })
+        
+        if existing_member:
+            raise HTTPException(status_code=400, detail="Username or email already exists")
+        
+        # Create team member with hashed password
+        team_member = TeamMember(
+            **team_data.dict(exclude={'password'}),
+            passwordHash=AuthManager.get_password_hash(team_data.password)
+        )
+        
+        result = await team_collection.insert_one(team_member.dict(by_alias=True))
+        team_member.id = str(result.inserted_id)
+        
+        return team_member
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Create team member error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create team member")
+
+@api_router.put("/admin/team/{member_id}", response_model=TeamMember)
+async def update_team_member(member_id: str, team_data: TeamMemberUpdate, current_admin: dict = Depends(admin_required)):
+    """Update team member (admin)."""
+    try:
+        db = get_database()
+        team_collection = db.team_members
+        
+        # Check if member exists
+        existing_member = await team_collection.find_one({"_id": member_id})
+        if not existing_member:
+            raise HTTPException(status_code=404, detail="Team member not found")
+        
+        # Update member
+        update_data = {k: v for k, v in team_data.dict().items() if v is not None}
+        
+        await team_collection.update_one(
+            {"_id": member_id},
+            {"$set": update_data}
+        )
+        
+        # Return updated member
+        updated_member = await team_collection.find_one({"_id": member_id})
+        return TeamMember(**updated_member)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update team member error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update team member")
+
+@api_router.delete("/admin/team/{member_id}")
+async def delete_team_member(member_id: str, current_admin: dict = Depends(admin_required)):
+    """Delete team member (admin)."""
+    try:
+        db = get_database()
+        team_collection = db.team_members
+        
+        result = await team_collection.delete_one({"_id": member_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Team member not found")
+        
+        return {"message": "Team member deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete team member error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete team member")
+
+@api_router.post("/admin/team/{member_id}/change-password")
+async def admin_change_team_password(
+    member_id: str, 
+    new_password: str = Form(...),
+    current_admin: dict = Depends(admin_required)
+):
+    """Change team member password (admin)."""
+    try:
+        db = get_database()
+        team_collection = db.team_members
+        
+        # Check if member exists
+        existing_member = await team_collection.find_one({"_id": member_id})
+        if not existing_member:
+            raise HTTPException(status_code=404, detail="Team member not found")
+        
+        # Hash new password and update
+        new_password_hash = AuthManager.get_password_hash(new_password)
+        
+        await team_collection.update_one(
+            {"_id": member_id},
+            {"$set": {"passwordHash": new_password_hash, "updatedAt": datetime.utcnow()}}
+        )
+        
+        return {"message": "Password updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Change team password error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to change password")
+
+# Popup/Announcement endpoints
+@api_router.get("/popups", response_model=List[Popup])
+async def get_active_popups():
+    """Get active popups (public)."""
+    try:
+        db = get_database()
+        popup_collection = db.popups
+        
+        # Get active popups that haven't expired
+        current_time = datetime.utcnow()
+        popup_cursor = popup_collection.find({
+            "isActive": True,
+            "startDate": {"$lte": current_time},
+            "$or": [
+                {"endDate": None},
+                {"endDate": {"$gte": current_time}}
+            ]
+        }).sort("createdAt", -1)
+        
+        popups = await popup_cursor.to_list(length=100)
+        return [Popup(**popup) for popup in popups]
+        
+    except Exception as e:
+        logger.error(f"Get popups error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch popups")
+
+@api_router.get("/admin/popups", response_model=List[Popup])
+async def admin_get_popups(current_admin: dict = Depends(admin_required)):
+    """Get all popups (admin)."""
+    try:
+        db = get_database()
+        popup_collection = db.popups
+        
+        popup_cursor = popup_collection.find({}).sort("createdAt", -1)
+        popups = await popup_cursor.to_list(length=1000)
+        
+        return [Popup(**popup) for popup in popups]
+        
+    except Exception as e:
+        logger.error(f"Admin get popups error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch popups")
+
+@api_router.post("/admin/popups", response_model=Popup)
+async def create_popup(popup_data: PopupCreate, current_admin: dict = Depends(admin_required)):
+    """Create new popup (admin)."""
+    try:
+        db = get_database()
+        popup_collection = db.popups
+        
+        popup = Popup(**popup_data.dict())
+        
+        result = await popup_collection.insert_one(popup.dict(by_alias=True))
+        popup.id = str(result.inserted_id)
+        
+        return popup
+        
+    except Exception as e:
+        logger.error(f"Create popup error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create popup")
+
+@api_router.put("/admin/popups/{popup_id}", response_model=Popup)
+async def update_popup(popup_id: str, popup_data: PopupUpdate, current_admin: dict = Depends(admin_required)):
+    """Update popup (admin)."""
+    try:
+        db = get_database()
+        popup_collection = db.popups
+        
+        # Check if popup exists
+        existing_popup = await popup_collection.find_one({"_id": popup_id})
+        if not existing_popup:
+            raise HTTPException(status_code=404, detail="Popup not found")
+        
+        # Update popup
+        update_data = {k: v for k, v in popup_data.dict().items() if v is not None}
+        
+        await popup_collection.update_one(
+            {"_id": popup_id},
+            {"$set": update_data}
+        )
+        
+        # Return updated popup
+        updated_popup = await popup_collection.find_one({"_id": popup_id})
+        return Popup(**updated_popup)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update popup error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update popup")
+
+@api_router.delete("/admin/popups/{popup_id}")
+async def delete_popup(popup_id: str, current_admin: dict = Depends(admin_required)):
+    """Delete popup (admin)."""
+    try:
+        db = get_database()
+        popup_collection = db.popups
+        
+        result = await popup_collection.delete_one({"_id": popup_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Popup not found")
+        
+        return {"message": "Popup deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete popup error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete popup")
+
 # Include router in app
 app.include_router(api_router)
