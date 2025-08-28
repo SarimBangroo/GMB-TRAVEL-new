@@ -89,7 +89,7 @@ def get_collection(collection_name: str):
 # Initialize default admin if not exists
 async def create_default_admin():
     """Create default admin user if not exists."""
-    from .auth import AuthManager
+    from auth import AuthManager
     
     try:
         db = Database.db
@@ -99,7 +99,7 @@ async def create_default_admin():
         existing_admin = await admin_collection.find_one({"username": "admin"})
         
         if not existing_admin:
-            from .models import Admin
+            from models import Admin
             
             default_admin = Admin(
                 username="admin",
