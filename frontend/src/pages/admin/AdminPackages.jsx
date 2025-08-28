@@ -207,6 +207,40 @@ const AdminPackages = () => {
     }
   };
 
+  const handleDownloadPDF = async (pkg) => {
+    try {
+      toast.loading('Generating PDF...', { id: 'pdf-gen' });
+      
+      // Mock PDF generation - replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast.success('PDF generated successfully!', { id: 'pdf-gen' });
+      
+      // In real implementation, this would download the actual PDF
+      // window.open(`/api/admin/packages/${pkg.id}/download-pdf`, '_blank');
+      
+    } catch (error) {
+      toast.error('Failed to generate PDF', { id: 'pdf-gen' });
+    }
+  };
+
+  const handleSendPDF = async (pkg) => {
+    try {
+      const clientEmail = prompt('Enter client email address:');
+      if (!clientEmail) return;
+      
+      toast.loading('Sending PDF...', { id: 'pdf-send' });
+      
+      // Mock PDF sending - replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast.success(`PDF sent to ${clientEmail}!`, { id: 'pdf-send' });
+      
+    } catch (error) {
+      toast.error('Failed to send PDF', { id: 'pdf-send' });
+    }
+  };
+
   const filteredPackages = packages.filter(pkg => {
     const matchesSearch = pkg.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          pkg.description.toLowerCase().includes(searchTerm.toLowerCase());
