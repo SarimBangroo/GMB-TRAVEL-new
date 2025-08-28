@@ -334,3 +334,127 @@ class SiteSettingsUpdate(BaseModel):
     seoSettings: Optional[SeoSettings] = None
     businessStats: Optional[BusinessStats] = None
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+# Team Management Models
+class UserRole(str, Enum):
+    admin = "admin"
+    manager = "manager"
+    agent = "agent"
+
+class TeamMember(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    fullName: str
+    email: EmailStr
+    phone: str
+    username: str
+    passwordHash: str
+    role: UserRole
+    department: str
+    joiningDate: datetime
+    isActive: bool = True
+    lastLogin: Optional[datetime] = None
+    packagesCreated: int = 0
+    clientsManaged: int = 0
+    avatar: Optional[str] = None
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
+
+class TeamMemberCreate(BaseModel):
+    fullName: str
+    email: EmailStr
+    phone: str
+    username: str
+    password: str
+    role: UserRole
+    department: str
+    joiningDate: datetime
+    isActive: bool = True
+
+class TeamMemberUpdate(BaseModel):
+    fullName: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    username: Optional[str] = None
+    role: Optional[UserRole] = None
+    department: Optional[str] = None
+    joiningDate: Optional[datetime] = None
+    isActive: Optional[bool] = None
+    packagesCreated: Optional[int] = None
+    clientsManaged: Optional[int] = None
+    avatar: Optional[str] = None
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+class PasswordChangeRequest(BaseModel):
+    oldPassword: str
+    newPassword: str
+
+class TeamLogin(BaseModel):
+    username: str
+    password: str
+
+# Popup/Announcement Models
+class PopupType(str, Enum):
+    offer = "offer"
+    announcement = "announcement"
+    news = "news"
+    alert = "alert"
+
+class Popup(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    title: str
+    content: str
+    popupType: PopupType
+    backgroundColor: str = "#ffffff"
+    textColor: str = "#000000"
+    buttonText: str = "Close"
+    buttonColor: str = "#f59e0b"
+    imageUrl: Optional[str] = None
+    linkUrl: Optional[str] = None
+    isActive: bool = True
+    showOnPages: List[str] = ["home"]  # pages where popup should show
+    displayDuration: int = 5000  # milliseconds
+    cookieExpiry: int = 24  # hours before showing again
+    startDate: datetime = Field(default_factory=datetime.utcnow)
+    endDate: Optional[datetime] = None
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
+
+class PopupCreate(BaseModel):
+    title: str
+    content: str
+    popupType: PopupType
+    backgroundColor: str = "#ffffff"
+    textColor: str = "#000000"
+    buttonText: str = "Close"
+    buttonColor: str = "#f59e0b"
+    imageUrl: Optional[str] = None
+    linkUrl: Optional[str] = None
+    showOnPages: List[str] = ["home"]
+    displayDuration: int = 5000
+    cookieExpiry: int = 24
+    startDate: datetime = Field(default_factory=datetime.utcnow)
+    endDate: Optional[datetime] = None
+
+class PopupUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    popupType: Optional[PopupType] = None
+    backgroundColor: Optional[str] = None
+    textColor: Optional[str] = None
+    buttonText: Optional[str] = None
+    buttonColor: Optional[str] = None
+    imageUrl: Optional[str] = None
+    linkUrl: Optional[str] = None
+    isActive: Optional[bool] = None
+    showOnPages: Optional[List[str]] = None
+    displayDuration: Optional[int] = None
+    cookieExpiry: Optional[int] = None
+    startDate: Optional[datetime] = None
+    endDate: Optional[datetime] = None
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
