@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSiteSettings } from '../hooks/useSiteSettings';
+import SEOHead from '../components/SEOHead';
 
 const Contact = () => {
   const { siteSettings } = useSiteSettings();
