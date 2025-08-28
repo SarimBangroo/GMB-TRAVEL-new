@@ -109,6 +109,13 @@ const AdminDashboard = () => {
       icon: Settings,
       link: '/admin/site-settings',
       color: 'bg-slate-600 hover:bg-slate-700'
+    },
+    {
+      title: 'Popup Manager',
+      description: 'Create and manage popups and offers',
+      icon: MessageSquare,
+      link: '/admin/popups',
+      color: 'bg-pink-600 hover:bg-pink-700'
     }
   ];
 
