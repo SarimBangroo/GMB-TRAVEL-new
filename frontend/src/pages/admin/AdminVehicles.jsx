@@ -464,12 +464,12 @@ const AdminVehicles = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Vehicle Image URL *</label>
-                <Input
+                <label className="block text-sm font-medium mb-2">Vehicle Image *</label>
+                <ImageUpload
                   value={formData.image}
-                  onChange={(e) => handleInputChange('image', e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  required
+                  onChange={(url) => handleInputChange('image', url)}
+                  category="vehicles"
+                  placeholder="Upload vehicle image"
                 />
               </div>
 
