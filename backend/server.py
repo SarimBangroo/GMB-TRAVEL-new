@@ -1611,11 +1611,11 @@ async def update_whatsapp_config(
 
 @api_router.get("/admin/whatsapp/templates", tags=["whatsapp-crm"])
 async def get_whatsapp_templates(
-    current_admin: dict = Depends(admin_required),
-    db=Depends(get_database)
+    current_admin: dict = Depends(admin_required)
 ):
     """Get all WhatsApp message templates (admin)."""
     try:
+        db = get_database()
         templates_cursor = db.whatsapp_templates.find({"isActive": True})
         templates = await templates_cursor.to_list(length=100)
         
