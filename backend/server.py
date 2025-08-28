@@ -914,5 +914,509 @@ async def delete_popup(popup_id: str, current_admin: dict = Depends(admin_requir
         logger.error(f"Delete popup error: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete popup")
 
+# Enhanced CRM endpoints
+@api_router.get("/admin/clients", response_model=List[Client])
+async def get_clients(current_user: dict = Depends(team_member_required)):
+    """Get all clients (team members)."""
+    try:
+        db = get_database()
+        client_collection = db.clients
+        
+        client_cursor = client_collection.find({}).sort("createdAt", -1)
+        clients = await client_cursor.to_list(length=1000)
+        
+        return [Client(**client) for client in clients]
+        
+    except Exception as e:
+        logger.error(f"Get clients error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch clients")
+
+@api_router.post("/admin/clients", response_model=Client)
+async def create_client(client_data: ClientCreate, current_user: dict = Depends(team_member_required)):
+    """Create new client (team members)."""
+    try:
+        db = get_database()
+        client_collection = db.clients
+        
+        # Check if email already exists
+        existing_client = await client_collection.find_one({"email": client_data.email})
+        if existing_client:
+            raise HTTPException(status_code=400, detail="Client with this email already exists")
+        
+        client = Client(
+            **client_data.dict(),
+            assignedTo=current_user.get("user_id")
+        )
+        
+        result = await client_collection.insert_one(client.dict(by_alias=True))
+        client.id = str(result.inserted_id)
+        
+        return client
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Create client error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create client")
+
+@api_router.put("/admin/clients/{client_id}", response_model=Client)
+async def update_client(client_id: str, client_data: ClientUpdate, current_user: dict = Depends(team_member_required)):
+    """Update client (team members)."""
+    try:
+        db = get_database()
+        client_collection = db.clients
+        
+        # Check if client exists
+        existing_client = await client_collection.find_one({"_id": client_id})
+        if not existing_client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Update client
+        update_data = {k: v for k, v in client_data.dict().items() if v is not None}
+        
+        await client_collection.update_one(
+            {"_id": client_id},
+            {"$set": update_data}
+        )
+        
+        # Return updated client
+        updated_client = await client_collection.find_one({"_id": client_id})
+        return Client(**updated_client)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update client error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update client")
+
+@api_router.delete("/admin/clients/{client_id}")
+async def delete_client(client_id: str, current_user: dict = Depends(team_member_required)):
+    """Delete client (team members)."""
+    try:
+        db = get_database()
+        client_collection = db.clients
+        
+        result = await client_collection.delete_one({"_id": client_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        return {"message": "Client deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete client error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete client")
+
+@api_router.post("/admin/clients/{client_id}/communication", response_model=Client)
+async def add_client_communication(
+    client_id: str, 
+    communication_data: CommunicationCreate, 
+    current_user: dict = Depends(team_member_required)
+):
+    """Add communication to client (team members)."""
+    try:
+        db = get_database()
+        client_collection = db.clients
+        
+        # Check if client exists
+        existing_client = await client_collection.find_one({"_id": client_id})
+        if not existing_client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Create communication record
+        communication = Communication(
+            **communication_data.dict(),
+            completedAt=datetime.utcnow() if communication_data.scheduledFor is None else None
+        )
+        
+        # Update client with new communication and last contact time
+        await client_collection.update_one(
+            {"_id": client_id},
+            {
+                "$push": {"communicationHistory": communication.dict()},
+                "$set": {"lastContact": datetime.utcnow(), "updatedAt": datetime.utcnow()}
+            }
+        )
+        
+        # Return updated client
+        updated_client = await client_collection.find_one({"_id": client_id})
+        return Client(**updated_client)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Add communication error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to add communication")
+
+@api_router.post("/admin/clients/{client_id}/followup", response_model=Client)
+async def add_client_followup(
+    client_id: str, 
+    followup_data: FollowUpCreate, 
+    current_user: dict = Depends(team_member_required)
+):
+    """Add follow-up to client (team members)."""
+    try:
+        db = get_database()
+        client_collection = db.clients
+        
+        # Check if client exists
+        existing_client = await client_collection.find_one({"_id": client_id})
+        if not existing_client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Create follow-up record
+        followup = FollowUp(
+            **followup_data.dict(),
+            assignedTo=followup_data.assignedTo or current_user.get("user_id")
+        )
+        
+        # Update client with new follow-up
+        await client_collection.update_one(
+            {"_id": client_id},
+            {
+                "$push": {"followUps": followup.dict()},
+                "$set": {"updatedAt": datetime.utcnow()}
+            }
+        )
+        
+        # Return updated client
+        updated_client = await client_collection.find_one({"_id": client_id})
+        return Client(**updated_client)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Add follow-up error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to add follow-up")
+
+@api_router.post("/admin/clients/{client_id}/review", response_model=Client)
+async def add_client_review(
+    client_id: str, 
+    review_data: ReviewCreate, 
+    current_user: dict = Depends(team_member_required)
+):
+    """Add review from client (team members)."""
+    try:
+        db = get_database()
+        client_collection = db.clients
+        
+        # Check if client exists
+        existing_client = await client_collection.find_one({"_id": client_id})
+        if not existing_client:
+            raise HTTPException(status_code=404, detail="Client not found")
+        
+        # Create review record
+        review = Review(**review_data.dict())
+        
+        # Update client with new review
+        await client_collection.update_one(
+            {"_id": client_id},
+            {
+                "$push": {"reviews": review.dict()},
+                "$set": {"updatedAt": datetime.utcnow()}
+            }
+        )
+        
+        # Return updated client
+        updated_client = await client_collection.find_one({"_id": client_id})
+        return Client(**updated_client)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Add review error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to add review")
+
+# Blog Management endpoints
+@api_router.get("/blog/posts", response_model=List[BlogPost])
+async def get_published_blog_posts(
+    category: Optional[str] = None,
+    tag: Optional[str] = None,
+    limit: int = Query(default=20, le=100)
+):
+    """Get published blog posts (public)."""
+    try:
+        db = get_database()
+        blog_collection = db.blog_posts
+        
+        # Build query
+        query = {"status": "published"}
+        if category:
+            query["category"] = category
+        if tag:
+            query["tags"] = {"$in": [tag]}
+        
+        blog_cursor = blog_collection.find(query).sort("publishedAt", -1).limit(limit)
+        blogs = await blog_cursor.to_list(length=limit)
+        
+        return [BlogPost(**blog) for blog in blogs]
+        
+    except Exception as e:
+        logger.error(f"Get blog posts error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch blog posts")
+
+@api_router.get("/blog/posts/{slug}", response_model=BlogPost)
+async def get_blog_post_by_slug(slug: str):
+    """Get blog post by slug (public)."""
+    try:
+        db = get_database()
+        blog_collection = db.blog_posts
+        
+        blog = await blog_collection.find_one({"slug": slug, "status": "published"})
+        
+        if not blog:
+            raise HTTPException(status_code=404, detail="Blog post not found")
+        
+        # Increment view count
+        await blog_collection.update_one(
+            {"_id": blog["_id"]},
+            {"$inc": {"views": 1}}
+        )
+        
+        return BlogPost(**blog)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Get blog post error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch blog post")
+
+@api_router.get("/admin/blog/posts", response_model=List[BlogPost])
+async def admin_get_blog_posts(current_user: dict = Depends(team_member_required)):
+    """Get all blog posts (team members)."""
+    try:
+        db = get_database()
+        blog_collection = db.blog_posts
+        
+        blog_cursor = blog_collection.find({}).sort("createdAt", -1)
+        blogs = await blog_cursor.to_list(length=1000)
+        
+        return [BlogPost(**blog) for blog in blogs]
+        
+    except Exception as e:
+        logger.error(f"Admin get blog posts error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch blog posts")
+
+@api_router.post("/admin/blog/posts", response_model=BlogPost)
+async def create_blog_post(blog_data: BlogPostCreate, current_user: dict = Depends(team_member_required)):
+    """Create new blog post (team members)."""
+    try:
+        db = get_database()
+        blog_collection = db.blog_posts
+        
+        # Check if slug already exists
+        slug = blog_data.title.lower().replace(" ", "-").replace("'", "")[:50]
+        existing_blog = await blog_collection.find_one({"slug": slug})
+        if existing_blog:
+            # Add timestamp to make slug unique
+            slug = f"{slug}-{int(datetime.utcnow().timestamp())}"
+        
+        blog = BlogPost(
+            **blog_data.dict(),
+            slug=slug,
+            authorId=current_user.get("user_id")
+        )
+        
+        result = await blog_collection.insert_one(blog.dict(by_alias=True))
+        blog.id = str(result.inserted_id)
+        
+        return blog
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Create blog post error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create blog post")
+
+@api_router.put("/admin/blog/posts/{post_id}", response_model=BlogPost)
+async def update_blog_post(post_id: str, blog_data: BlogPostUpdate, current_user: dict = Depends(team_member_required)):
+    """Update blog post (team members)."""
+    try:
+        db = get_database()
+        blog_collection = db.blog_posts
+        
+        # Check if blog exists
+        existing_blog = await blog_collection.find_one({"_id": post_id})
+        if not existing_blog:
+            raise HTTPException(status_code=404, detail="Blog post not found")
+        
+        # Handle status changes
+        update_data = {k: v for k, v in blog_data.dict().items() if v is not None}
+        
+        if "status" in update_data:
+            if update_data["status"] == "published" and not existing_blog.get("publishedAt"):
+                update_data["publishedAt"] = datetime.utcnow()
+            elif update_data["status"] == "approved":
+                update_data["approvedBy"] = current_user.get("user_id")
+        
+        await blog_collection.update_one(
+            {"_id": post_id},
+            {"$set": update_data}
+        )
+        
+        # Return updated blog
+        updated_blog = await blog_collection.find_one({"_id": post_id})
+        return BlogPost(**updated_blog)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update blog post error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update blog post")
+
+@api_router.delete("/admin/blog/posts/{post_id}")
+async def delete_blog_post(post_id: str, current_user: dict = Depends(admin_required)):
+    """Delete blog post (admin only)."""
+    try:
+        db = get_database()
+        blog_collection = db.blog_posts
+        
+        result = await blog_collection.delete_one({"_id": post_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Blog post not found")
+        
+        return {"message": "Blog post deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Delete blog post error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete blog post")
+
+# AI Blog Generation endpoints
+@api_router.post("/admin/blog/generate", response_model=BlogPost)
+async def generate_ai_blog_post(request_data: AIBlogRequest, current_user: dict = Depends(team_member_required)):
+    """Generate blog post using AI (team members)."""
+    try:
+        from ai_blog_generator import ai_blog_generator
+        
+        # Generate blog post
+        blog_data = await ai_blog_generator.generate_blog_post(
+            topic=request_data.topic,
+            category=request_data.category.value,
+            keywords=request_data.keywords,
+            target_length=request_data.targetLength,
+            tone=request_data.tone,
+            focus_areas=request_data.focusAreas
+        )
+        
+        # Create blog post in database
+        db = get_database()
+        blog_collection = db.blog_posts
+        
+        # Ensure unique slug
+        base_slug = blog_data["slug"]
+        slug = base_slug
+        counter = 1
+        while await blog_collection.find_one({"slug": slug}):
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        
+        blog = BlogPost(
+            **blog_data,
+            slug=slug,
+            status=BlogStatus.pending_approval,
+            authorId=current_user.get("user_id"),
+            isAIGenerated=True
+        )
+        
+        result = await blog_collection.insert_one(blog.dict(by_alias=True))
+        blog.id = str(result.inserted_id)
+        
+        return blog
+        
+    except Exception as e:
+        logger.error(f"Generate AI blog error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate blog post: {str(e)}")
+
+@api_router.get("/admin/blog/topics/{category}")
+async def get_topic_suggestions(category: str, count: int = Query(default=5, le=20), current_user: dict = Depends(team_member_required)):
+    """Get AI-generated topic suggestions (team members)."""
+    try:
+        from ai_blog_generator import ai_blog_generator
+        
+        topics = await ai_blog_generator.generate_topic_suggestions(category, count)
+        return {"topics": topics}
+        
+    except Exception as e:
+        logger.error(f"Get topic suggestions error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate topic suggestions")
+
+@api_router.get("/admin/blog/settings", response_model=BlogGenerationSettings)
+async def get_blog_generation_settings(current_admin: dict = Depends(admin_required)):
+    """Get blog generation settings (admin)."""
+    try:
+        db = get_database()
+        settings_collection = db.blog_generation_settings
+        
+        settings = await settings_collection.find_one({"_id": {"$exists": True}})
+        
+        if not settings:
+            # Create default settings
+            default_settings = BlogGenerationSettings()
+            await settings_collection.insert_one(default_settings.dict(by_alias=True))
+            return default_settings
+        
+        return BlogGenerationSettings(**settings)
+        
+    except Exception as e:
+        logger.error(f"Get blog settings error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch blog settings")
+
+@api_router.put("/admin/blog/settings", response_model=BlogGenerationSettings)
+async def update_blog_generation_settings(settings_data: dict, current_admin: dict = Depends(admin_required)):
+    """Update blog generation settings (admin)."""
+    try:
+        db = get_database()
+        settings_collection = db.blog_generation_settings
+        
+        # Find existing settings
+        existing_settings = await settings_collection.find_one({"_id": {"$exists": True}})
+        
+        update_data = {k: v for k, v in settings_data.items() if k != "_id"}
+        update_data["updatedAt"] = datetime.utcnow()
+        
+        if existing_settings:
+            await settings_collection.update_one(
+                {"_id": existing_settings["_id"]},
+                {"$set": update_data}
+            )
+            updated_settings = await settings_collection.find_one({"_id": existing_settings["_id"]})
+        else:
+            new_settings = BlogGenerationSettings(**update_data)
+            await settings_collection.insert_one(new_settings.dict(by_alias=True))
+            updated_settings = new_settings.dict(by_alias=True)
+        
+        return BlogGenerationSettings(**updated_settings)
+        
+    except Exception as e:
+        logger.error(f"Update blog settings error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update blog settings")
+
+@api_router.post("/admin/blog/test-ai")
+async def test_ai_connection(current_admin: dict = Depends(admin_required)):
+    """Test AI connection (admin)."""
+    try:
+        from ai_blog_generator import ai_blog_generator
+        
+        is_working = await ai_blog_generator.test_ai_connection()
+        
+        return {
+            "status": "success" if is_working else "failed",
+            "message": "AI connection is working properly" if is_working else "AI connection test failed",
+            "timestamp": datetime.utcnow()
+        }
+        
+    except Exception as e:
+        logger.error(f"AI connection test error: {e}")
+        return {
+            "status": "error",
+            "message": f"AI connection test error: {str(e)}",
+            "timestamp": datetime.utcnow()
+        }
+
 # Include router in app
 app.include_router(api_router)
