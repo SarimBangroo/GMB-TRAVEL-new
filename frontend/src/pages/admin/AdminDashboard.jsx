@@ -105,6 +105,13 @@ const AdminDashboard = () => {
       color: 'bg-amber-600 hover:bg-amber-700'
     },
     {
+      title: 'Vehicle Management',
+      description: 'Manage cab service vehicles and pricing',
+      icon: Car,
+      link: '/admin/vehicles',
+      color: 'bg-orange-600 hover:bg-orange-700'
+    },
+    {
       title: 'Site Settings',
       description: 'Manage website content and settings',
       icon: Settings,
