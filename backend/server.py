@@ -1418,9 +1418,6 @@ async def test_ai_connection(current_admin: dict = Depends(admin_required)):
             "timestamp": datetime.utcnow()
         }
 
-# Include router in app
-app.include_router(api_router)
-
 # ============================================================================
 # VEHICLE MANAGEMENT ENDPOINTS
 # ============================================================================
