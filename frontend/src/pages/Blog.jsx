@@ -80,6 +80,13 @@ const Blog = () => {
     });
   };
 
+  const calculateReadTime = (content) => {
+    const wordsPerMinute = 200;
+    const wordCount = content ? content.split(' ').length : 0;
+    const readTime = Math.ceil(wordCount / wordsPerMinute);
+    return `${readTime} min`;
+  };
+
   const formatViews = (views) => {
     if (views > 1000) {
       return `${(views / 1000).toFixed(1)}k`;
