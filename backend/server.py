@@ -1534,11 +1534,11 @@ async def update_vehicle(
 @api_router.delete("/admin/vehicles/{vehicle_id}", tags=["admin-vehicles"])
 async def delete_vehicle(
     vehicle_id: str,
-    current_admin: dict = Depends(admin_required),
-    db=Depends(get_database)
+    current_admin: dict = Depends(admin_required)
 ):
     """Delete a vehicle (admin)."""
     try:
+        db = get_database()
         result = await db.vehicles.delete_one({"_id": vehicle_id})
         
         if result.deleted_count == 0:
