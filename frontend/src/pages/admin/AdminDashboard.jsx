@@ -83,6 +83,13 @@ const AdminDashboard = () => {
       color: 'bg-green-600 hover:bg-green-700'
     },
     {
+      title: 'Team Management',
+      description: 'Manage team members and user accounts',
+      icon: Users,
+      link: '/admin/team',
+      color: 'bg-indigo-600 hover:bg-indigo-700'
+    },
+    {
       title: 'Manage Images',
       description: 'Upload and organize gallery images',
       icon: Camera,
