@@ -26,6 +26,7 @@ import AdminTeam from './pages/admin/AdminTeam';
 import AdminSiteSettings from './pages/admin/AdminSiteSettings';
 import AdminPopups from './pages/admin/AdminPopups';
 import AdminBlog from './pages/admin/AdminBlog';
+import AdminVehicles from './pages/admin/AdminVehicles';
 
 function App() {
   return (
