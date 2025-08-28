@@ -1748,3 +1748,59 @@ async def get_whatsapp_messages(
 
 # Include router in app
 app.include_router(api_router)
+
+# ============================================================================
+# IMAGE UPLOAD ENDPOINTS
+# ============================================================================
+
+@api_router.post("/admin/upload-image", tags=["admin-images"])
+async def upload_image(
+    file: UploadFile = File(...),
+    category: str = Form("general"),
+    current_admin: dict = Depends(admin_required)
+):
+    """Upload image for admin use (vehicles, packages, etc.)"""
+    try:
+        # Validate file type
+        if not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="File must be an image")
+        
+        # Validate file size (max 5MB)
+        file_size = 0
+        content = await file.read()
+        file_size = len(content)
+        
+        if file_size > 5 * 1024 * 1024:  # 5MB
+            raise HTTPException(status_code=400, detail="File size must be less than 5MB")
+        
+        # Create uploads directory if it doesn't exist
+        upload_dir = Path("uploads") / category
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate unique filename
+        file_extension = Path(file.filename).suffix
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+        file_path = upload_dir / unique_filename
+        
+        # Save file
+        with open(file_path, "wb") as buffer:
+            buffer.write(content)
+        
+        # Return file URL
+        file_url = f"/uploads/{category}/{unique_filename}"
+        
+        logger.info(f"Image uploaded successfully: {file_url}")
+        
+        return {
+            "status": "success",
+            "message": "Image uploaded successfully",
+            "url": file_url,
+            "filename": unique_filename
+        }
+        
+    except Exception as e:
+        logger.error(f"Image upload error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Serve uploaded files
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
