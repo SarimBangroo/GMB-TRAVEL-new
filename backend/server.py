@@ -1474,14 +1474,15 @@ async def create_vehicle(
     """Create a new vehicle (admin)."""
     try:
         db = get_database()
-        vehicle_dict = vehicle_data.dict()
-        vehicle_dict["createdAt"] = datetime.utcnow()
-        vehicle_dict["updatedAt"] = datetime.utcnow()
+        
+        # Create Vehicle instance to get proper UUID ID
+        vehicle = Vehicle(**vehicle_data.dict())
+        vehicle_dict = vehicle.dict(by_alias=True)
         
         result = await db.vehicles.insert_one(vehicle_dict)
         
         # Get the created vehicle
-        created_vehicle = await db.vehicles.find_one({"_id": result.inserted_id})
+        created_vehicle = await db.vehicles.find_one({"_id": vehicle.id})
         created_vehicle["_id"] = str(created_vehicle["_id"])
         
         return {
