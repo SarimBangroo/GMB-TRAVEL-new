@@ -1427,11 +1427,11 @@ app.include_router(api_router)
 
 @api_router.get("/vehicles", tags=["vehicles"])
 async def get_vehicles(
-    active_only: bool = Query(True, description="Return only active vehicles"),
-    db=Depends(get_database)
+    active_only: bool = Query(True, description="Return only active vehicles")
 ):
     """Get all vehicles (public endpoint)."""
     try:
+        db = get_database()
         filter_criteria = {}
         if active_only:
             filter_criteria["isActive"] = True
