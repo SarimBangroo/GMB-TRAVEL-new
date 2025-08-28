@@ -13,6 +13,8 @@ import PackageDetail from './pages/PackageDetail';
 import Testimonials from './pages/Testimonials';
 import BookCab from './pages/BookCab';
 import Contact from './pages/Contact';
+import Blog from './pages/Blog';
+import BlogPost from './pages/BlogPost';
 import TeamLogin from './pages/TeamLogin';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -23,6 +25,7 @@ import AdminBookings from './pages/admin/AdminBookings';
 import AdminTeam from './pages/admin/AdminTeam';
 import AdminSiteSettings from './pages/admin/AdminSiteSettings';
 import AdminPopups from './pages/admin/AdminPopups';
+import AdminBlog from './pages/admin/AdminBlog';
 
 function App() {
   return (
@@ -80,6 +83,21 @@ function App() {
                   <PopupDisplay currentPage="contact" />
                 </>
               } />
+              <Route path="/blog" element={
+                <>
+                  <Header />
+                  <Blog />
+                  <Footer />
+                  <PopupDisplay currentPage="blog" />
+                </>
+              } />
+              <Route path="/blog/:slug" element={
+                <>
+                  <Header />
+                  <BlogPost />
+                  <Footer />
+                </>
+              } />
               
               {/* Authentication Routes */}
               <Route path="/team/login" element={<TeamLogin />} />
@@ -94,6 +112,7 @@ function App() {
               <Route path="/admin/team" element={<AdminTeam />} />
               <Route path="/admin/site-settings" element={<AdminSiteSettings />} />
               <Route path="/admin/popups" element={<AdminPopups />} />
+              <Route path="/admin/blog" element={<AdminBlog />} />
             </Routes>
             <Toaster />
           </SiteSettingsProvider>
