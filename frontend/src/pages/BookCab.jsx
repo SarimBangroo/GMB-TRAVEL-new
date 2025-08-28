@@ -79,7 +79,7 @@ const BookCab = () => {
 
   const handleVehicleSelect = (vehicle) => {
     setSelectedVehicle(vehicle);
-    setBookingForm(prev => ({ ...prev, vehicleType: vehicle.id }));
+    setBookingForm(prev => ({ ...prev, vehicleType: vehicle._id }));
   };
 
   const calculateEstimatedPrice = () => {
