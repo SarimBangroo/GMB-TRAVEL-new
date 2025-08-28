@@ -105,42 +105,32 @@ const AdminClients = () => {
     e.preventDefault();
     
     try {
+      const token = localStorage.getItem('adminToken');
+      
       if (editingClient) {
         // Update client
-        setClients(prev => 
-          prev.map(client => 
-            client.id === editingClient.id 
-              ? { 
-                  ...client, 
-                  ...clientForm,
-                  lastContact: client.lastContact,
-                  bookings: client.bookings,
-                  totalSpent: client.totalSpent,
-                  followUps: client.followUps
-                }
-              : client
-          )
+        await axios.put(
+          `${process.env.REACT_APP_BACKEND_URL}/admin/clients/${editingClient.id}`,
+          clientForm,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success('Client updated successfully!');
       } else {
         // Create new client
-        const newClient = {
-          id: Date.now().toString(),
-          ...clientForm,
-          createdAt: new Date().toISOString(),
-          lastContact: null,
-          bookings: 0,
-          totalSpent: 0,
-          followUps: []
-        };
-        setClients(prev => [newClient, ...prev]);
+        await axios.post(
+          `${process.env.REACT_APP_BACKEND_URL}/admin/clients`,
+          clientForm,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         toast.success('Client added successfully!');
       }
       
       resetForm();
       setIsDialogOpen(false);
+      fetchClients(); // Refresh the list
     } catch (error) {
-      toast.error('Failed to save client');
+      console.error('Error saving client:', error);
+      toast.error(error.response?.data?.detail || 'Failed to save client');
     }
   };
 
