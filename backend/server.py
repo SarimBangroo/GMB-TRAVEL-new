@@ -1660,11 +1660,11 @@ async def create_whatsapp_template(
 @api_router.post("/admin/whatsapp/send", tags=["whatsapp-crm"])
 async def send_whatsapp_message(
     message_data: dict,
-    current_admin: dict = Depends(admin_required),
-    db=Depends(get_database)
+    current_admin: dict = Depends(admin_required)
 ):
     """Send WhatsApp message to client (admin)."""
     try:
+        db = get_database()
         client_id = message_data.get("clientId")
         phone_number = message_data.get("phoneNumber")
         message = message_data.get("message")
