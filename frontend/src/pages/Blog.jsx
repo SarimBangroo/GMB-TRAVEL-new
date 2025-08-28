@@ -293,17 +293,19 @@ const Blog = () => {
                     <div className="flex items-center space-x-4 mb-3 text-sm text-slate-500">
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 mr-1" />
-                        {formatDate(post.publishedDate)}
+                        {formatDate(post.publishedAt || post.createdAt)}
                       </div>
                       <div className="flex items-center">
                         <Clock className="h-4 w-4 mr-1" />
-                        {post.readTime}
+                        {calculateReadTime(post.content)}
                       </div>
                     </div>
                     
-                    <h3 className="text-lg font-semibold text-slate-800 mb-3 group-hover:text-amber-600 transition-colors line-clamp-2">
-                      {post.title}
-                    </h3>
+                    <Link to={`/blog/${post.slug}`}>
+                      <h3 className="text-lg font-semibold text-slate-800 mb-3 group-hover:text-amber-600 transition-colors line-clamp-2">
+                        {post.title}
+                      </h3>
+                    </Link>
                     
                     <p className="text-slate-600 mb-4 line-clamp-3 text-sm">
                       {post.excerpt}
