@@ -175,119 +175,128 @@ const BookCab = () => {
             <p className="text-lg text-gray-600">Select from our premium fleet of vehicles</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {vehicleTypes.map((vehicle, index) => (
-              <div
-                key={vehicle.id}
-                className={`group relative cursor-pointer transform transition-all duration-500 hover:scale-105 ${
-                  selectedVehicle?.id === vehicle.id 
-                    ? 'scale-105 z-10' 
-                    : 'hover:z-10'
-                }`}
-                onClick={() => handleVehicleSelect(vehicle)}
-                style={{ 
-                  transform: `perspective(1000px) rotateX(5deg) rotateY(${index % 2 === 0 ? '-5deg' : '5deg'})`,
-                  animation: `float ${3 + index * 0.5}s ease-in-out infinite`
-                }}
-              >
-                <Card className={`relative overflow-hidden border-0 shadow-2xl transition-all duration-500 ${
-                  selectedVehicle?.id === vehicle.id 
-                    ? 'ring-4 ring-blue-500 shadow-blue-500/25' 
-                    : 'hover:shadow-3xl'
-                } bg-gradient-to-br from-white via-white to-gray-50`}>
-                  
-                  {/* Badge */}
-                  <div className="absolute top-4 left-4 z-10">
-                    <Badge className={`${vehicle.badgeColor} text-white font-semibold shadow-lg`}>
-                      {vehicle.badge}
-                    </Badge>
-                  </div>
-
-                  {/* Selection Indicator */}
-                  {selectedVehicle?.id === vehicle.id && (
-                    <div className="absolute top-4 right-4 z-10">
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-white" />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Vehicle Image with 3D Effect */}
-                  <div className="relative h-48 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10"></div>
-                    <img 
-                      src={vehicle.image} 
-                      alt={vehicle.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {vehicleTypes.map((vehicle, index) => (
+                <div
+                  key={vehicle._id}
+                  className={`group relative cursor-pointer transform transition-all duration-500 hover:scale-105 ${
+                    selectedVehicle?._id === vehicle._id 
+                      ? 'scale-105 z-10' 
+                      : 'hover:z-10'
+                  }`}
+                  onClick={() => handleVehicleSelect(vehicle)}
+                  style={{ 
+                    transform: `perspective(1000px) rotateX(5deg) rotateY(${index % 2 === 0 ? '-5deg' : '5deg'})`,
+                    animation: `float ${3 + index * 0.5}s ease-in-out infinite`
+                  }}
+                >
+                  <Card className={`relative overflow-hidden border-0 shadow-2xl transition-all duration-500 ${
+                    selectedVehicle?._id === vehicle._id 
+                      ? 'ring-4 ring-blue-500 shadow-blue-500/25' 
+                      : 'hover:shadow-3xl'
+                  } bg-gradient-to-br from-white via-white to-gray-50`}>
                     
-                    {/* Floating Price */}
-                    <div className="absolute bottom-4 right-4 z-20">
-                      <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg">
-                        <span className="text-blue-600 font-bold">₹{vehicle.price} {vehicle.priceUnit}</span>
+                    {/* Badge */}
+                    {vehicle.badge && (
+                      <div className="absolute top-4 left-4 z-10">
+                        <Badge className={`${vehicle.badgeColor} text-white font-semibold shadow-lg`}>
+                          {vehicle.badge}
+                        </Badge>
                       </div>
-                    </div>
-                  </div>
+                    )}
 
-                  <CardContent className="p-6">
-                    <div className="mb-4">
-                      <h3 className="text-xl font-bold text-gray-800 mb-1">{vehicle.name}</h3>
-                      <p className="text-sm text-gray-600 mb-2">{vehicle.model}</p>
-                      <div className="flex items-center text-gray-700">
-                        <Users className="w-4 h-4 mr-2 text-blue-500" />
-                        <span className="font-medium">{vehicle.capacity}</span>
+                    {/* Selection Indicator */}
+                    {selectedVehicle?._id === vehicle._id && (
+                      <div className="absolute top-4 right-4 z-10">
+                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <CheckCircle className="w-4 h-4 text-white" />
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Specifications Grid */}
-                    <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center text-xs">
-                        <Fuel className="w-3 h-3 mr-1 text-green-500" />
-                        <span>{vehicle.specifications.fuelType}</span>
-                      </div>
-                      <div className="flex items-center text-xs">
-                        <Zap className="w-3 h-3 mr-1 text-orange-500" />
-                        <span>{vehicle.specifications.transmission}</span>
-                      </div>
-                      <div className="flex items-center text-xs">
-                        <Navigation className="w-3 h-3 mr-1 text-blue-500" />
-                        <span>{vehicle.specifications.mileage}</span>
-                      </div>
-                      <div className="flex items-center text-xs">
-                        <Car className="w-3 h-3 mr-1 text-purple-500" />
-                        <span className="truncate">{vehicle.specifications.luggage}</span>
+                    {/* Vehicle Image with 3D Effect */}
+                    <div className="relative h-48 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10"></div>
+                      <img 
+                        src={vehicle.image} 
+                        alt={vehicle.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      
+                      {/* Floating Price */}
+                      <div className="absolute bottom-4 right-4 z-20">
+                        <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 shadow-lg">
+                          <span className="text-blue-600 font-bold">₹{vehicle.price} {vehicle.priceUnit}</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Features */}
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold text-gray-700 flex items-center">
-                        <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                        Key Features
-                      </h4>
-                      <div className="flex flex-wrap gap-1">
-                        {vehicle.features.slice(0, 3).map((feature, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                            {feature}
-                          </Badge>
-                        ))}
+                    <CardContent className="p-6">
+                      <div className="mb-4">
+                        <h3 className="text-xl font-bold text-gray-800 mb-1">{vehicle.name}</h3>
+                        <p className="text-sm text-gray-600 mb-2">{vehicle.model}</p>
+                        <div className="flex items-center text-gray-700">
+                          <Users className="w-4 h-4 mr-2 text-blue-500" />
+                          <span className="font-medium">{vehicle.capacity}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Select Button */}
-                    <Button 
-                      className={`w-full mt-4 transition-all duration-300 ${
-                        selectedVehicle?.id === vehicle.id
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                          : 'bg-gray-100 hover:bg-blue-600 hover:text-white text-gray-700'
-                      }`}
-                    >
-                      {selectedVehicle?.id === vehicle.id ? 'Selected' : 'Select Vehicle'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            ))}
+                      {/* Specifications Grid */}
+                      <div className="grid grid-cols-2 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center text-xs">
+                          <Fuel className="w-3 h-3 mr-1 text-green-500" />
+                          <span className="capitalize">{vehicle.specifications.fuelType}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <Zap className="w-3 h-3 mr-1 text-orange-500" />
+                          <span className="capitalize">{vehicle.specifications.transmission}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <Navigation className="w-3 h-3 mr-1 text-blue-500" />
+                          <span>{vehicle.specifications.mileage}</span>
+                        </div>
+                        <div className="flex items-center text-xs">
+                          <Car className="w-3 h-3 mr-1 text-purple-500" />
+                          <span className="truncate">{vehicle.specifications.luggage}</span>
+                        </div>
+                      </div>
+
+                      {/* Features */}
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-semibold text-gray-700 flex items-center">
+                          <Star className="w-4 h-4 mr-1 text-yellow-500" />
+                          Key Features
+                        </h4>
+                        <div className="flex flex-wrap gap-1">
+                          {vehicle.features.slice(0, 3).map((feature, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                              {feature}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Select Button */}
+                      <Button 
+                        className={`w-full mt-4 transition-all duration-300 ${
+                          selectedVehicle?._id === vehicle._id
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : 'bg-gray-100 hover:bg-blue-600 hover:text-white text-gray-700'
+                        }`}
+                      >
+                        {selectedVehicle?._id === vehicle._id ? 'Selected' : 'Select Vehicle'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </div>
+          )}
           </div>
         </div>
 
