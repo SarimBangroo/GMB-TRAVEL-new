@@ -66,88 +66,13 @@ const AdminClients = () => {
   const fetchClients = async () => {
     try {
       setIsLoading(true);
-      // Mock data for now - replace with actual API call
-      const mockClients = [
-        {
-          id: '1',
-          name: 'Rajesh Kumar',
-          email: 'rajesh.kumar@email.com',
-          phone: '+91 98765 43210',
-          whatsapp: '+91 98765 43210',
-          address: 'Delhi, India',
-          interests: 'Adventure, Photography',
-          budget: '50000-100000',
-          source: 'website',
-          status: 'confirmed',
-          notes: 'Interested in 7-day Kashmir package. Prefers adventure activities.',
-          preferredContact: 'whatsapp',
-          createdAt: '2024-11-20T10:30:00Z',
-          lastContact: '2024-11-25T15:45:00Z',
-          bookings: 2,
-          totalSpent: 150000,
-          followUps: [
-            {
-              date: '2024-11-25T15:45:00Z',
-              type: 'whatsapp',
-              message: 'Sent Kashmir package details via WhatsApp',
-              status: 'completed'
-            }
-          ]
-        },
-        {
-          id: '2',
-          name: 'Priya Sharma',
-          email: 'priya.sharma@email.com',
-          phone: '+91 87654 32109',
-          whatsapp: '+91 87654 32109',
-          address: 'Mumbai, India',
-          interests: 'Cultural Tourism, Photography',
-          budget: '30000-50000',
-          source: 'referral',
-          status: 'interested',
-          notes: 'Looking for honeymoon package. Interested in houseboat experience.',
-          preferredContact: 'phone',
-          createdAt: '2024-11-18T14:15:00Z',
-          lastContact: '2024-11-22T10:30:00Z',
-          bookings: 0,
-          totalSpent: 0,
-          followUps: [
-            {
-              date: '2024-11-22T10:30:00Z',
-              type: 'phone',
-              message: 'Called to discuss honeymoon packages',
-              status: 'completed'
-            },
-            {
-              date: '2024-11-27T11:00:00Z',
-              type: 'email',
-              message: 'Follow-up email with romantic packages',
-              status: 'pending'
-            }
-          ]
-        },
-        {
-          id: '3',
-          name: 'Amit Patel',
-          email: 'amit.patel@email.com',
-          phone: '+91 76543 21098',
-          whatsapp: '+91 76543 21098',
-          address: 'Gujarat, India',
-          interests: 'Family Travel, Sightseeing',
-          budget: '100000-200000',
-          source: 'social_media',
-          status: 'lead',
-          notes: 'Family of 6 members. Looking for group packages.',
-          preferredContact: 'email',
-          createdAt: '2024-11-15T09:20:00Z',
-          lastContact: null,
-          bookings: 0,
-          totalSpent: 0,
-          followUps: []
-        }
-      ];
-      setClients(mockClients);
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/admin/clients`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setClients(response.data);
     } catch (error) {
+      console.error('Error fetching clients:', error);
       toast.error('Failed to fetch clients');
     } finally {
       setIsLoading(false);
