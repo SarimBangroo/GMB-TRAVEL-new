@@ -93,7 +93,7 @@ async def admin_login(login_data: AdminLogin):
         
         # Create access token
         access_token = AuthManager.create_access_token(
-            data={"sub": admin["username"], "user_id": str(admin["_id"])}
+            data={"sub": admin["username"], "user_id": str(admin["_id"]), "role": "admin"}
         )
         
         return TokenResponse(access_token=access_token)
