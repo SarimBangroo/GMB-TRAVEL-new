@@ -54,7 +54,7 @@ const Footer = () => {
                 <Link to="/admin/login" className="text-slate-400 hover:text-amber-400 transition-colors text-sm flex items-center">
                   <span className="mr-1">🔐</span> Admin Login
                 </Link>
-                <Link to="/admin/login" className="text-slate-400 hover:text-amber-400 transition-colors text-sm flex items-center">
+                <Link to="/team/login" className="text-slate-400 hover:text-amber-400 transition-colors text-sm flex items-center">
                   <span className="mr-1">👥</span> Team Login
                 </Link>
               </li>
