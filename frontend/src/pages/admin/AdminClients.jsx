@@ -155,9 +155,14 @@ const AdminClients = () => {
   const handleDelete = async (clientId) => {
     if (window.confirm('Are you sure you want to delete this client?')) {
       try {
-        setClients(prev => prev.filter(client => client.id !== clientId));
+        const token = localStorage.getItem('adminToken');
+        await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/admin/clients/${clientId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         toast.success('Client deleted successfully');
+        fetchClients(); // Refresh the list
       } catch (error) {
+        console.error('Error deleting client:', error);
         toast.error('Failed to delete client');
       }
     }
