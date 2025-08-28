@@ -1586,11 +1586,11 @@ async def get_whatsapp_config(
 @api_router.put("/admin/whatsapp/config", tags=["whatsapp-crm"])
 async def update_whatsapp_config(
     config_data: dict,
-    current_admin: dict = Depends(admin_required),
-    db=Depends(get_database)
+    current_admin: dict = Depends(admin_required)
 ):
     """Update WhatsApp configuration (admin)."""
     try:
+        db = get_database()
         config_data["updatedAt"] = datetime.utcnow()
         
         # Update or create config
