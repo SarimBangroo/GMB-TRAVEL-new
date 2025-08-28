@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
 """
 Backend API Test Suite for G.M.B Travels Kashmir
-Testing Site Settings API endpoints
+Testing Team Management and Popup Management API endpoints
 """
 
 import requests
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Configuration
 BASE_URL = "https://gmb-travel-admin.preview.emergentagent.com/api"
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
+
+# Test team member credentials
+TEAM_MANAGER_USERNAME = "rajesh_manager"
+TEAM_MANAGER_PASSWORD = "manager123"
+TEAM_AGENT_USERNAME = "priya_agent"
+TEAM_AGENT_PASSWORD = "agent123"
 
 class APITester:
     def __init__(self):
