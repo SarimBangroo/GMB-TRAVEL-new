@@ -27,6 +27,7 @@ import AdminSiteSettings from './pages/admin/AdminSiteSettings';
 import AdminPopups from './pages/admin/AdminPopups';
 import AdminBlog from './pages/admin/AdminBlog';
 import AdminVehicles from './pages/admin/AdminVehicles';
+import AdminMediaManager from './pages/admin/AdminMediaManager';
 
 function App() {
   return (
