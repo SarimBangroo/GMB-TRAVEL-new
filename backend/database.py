@@ -92,6 +92,19 @@ async def create_indexes():
         # Create indexes for site settings
         await db.site_settings.create_index([("isActive", 1)])
         
+        # Create indexes for vehicles
+        await db.vehicles.create_index([("vehicleType", 1)])
+        await db.vehicles.create_index([("isActive", 1)])
+        await db.vehicles.create_index([("sortOrder", 1)])
+        await db.vehicles.create_index([("createdAt", -1)])
+        
+        # Create indexes for WhatsApp CRM
+        await db.whatsapp_messages.create_index([("clientId", 1)])
+        await db.whatsapp_messages.create_index([("phoneNumber", 1)])
+        await db.whatsapp_messages.create_index([("createdAt", -1)])
+        await db.whatsapp_templates.create_index([("category", 1)])
+        await db.whatsapp_templates.create_index([("isActive", 1)])
+        
         logger.info("Database indexes created successfully")
         
     except Exception as e:
