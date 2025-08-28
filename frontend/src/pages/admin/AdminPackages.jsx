@@ -356,12 +356,12 @@ const AdminPackages = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Main Image URL *</label>
-                    <Input
-                      type="url"
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Main Package Image *</label>
+                    <ImageUpload
                       value={packageForm.image}
-                      onChange={(e) => handleInputChange('image', e.target.value)}
-                      required
+                      onChange={(url) => handleInputChange('image', url)}
+                      category="packages"
+                      placeholder="Upload package image"
                     />
                   </div>
 
