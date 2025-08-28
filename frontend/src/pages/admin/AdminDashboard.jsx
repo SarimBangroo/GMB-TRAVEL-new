@@ -112,6 +112,13 @@ const AdminDashboard = () => {
       color: 'bg-orange-600 hover:bg-orange-700'
     },
     {
+      title: 'Media Manager', 
+      description: 'Centralized image upload and management',
+      icon: Camera,
+      link: '/admin/media',
+      color: 'bg-indigo-600 hover:bg-indigo-700'
+    },
+    {
       title: 'Site Settings',
       description: 'Manage website content and settings',
       icon: Settings,
