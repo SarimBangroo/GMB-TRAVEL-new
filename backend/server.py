@@ -1559,11 +1559,11 @@ async def delete_vehicle(
 
 @api_router.get("/admin/whatsapp/config", tags=["whatsapp-crm"])
 async def get_whatsapp_config(
-    current_admin: dict = Depends(admin_required),
-    db=Depends(get_database)
+    current_admin: dict = Depends(admin_required)
 ):
     """Get WhatsApp configuration (admin)."""
     try:
+        db = get_database()
         config = await db.whatsapp_config.find_one({})
         
         if not config:
