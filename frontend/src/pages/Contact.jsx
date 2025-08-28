@@ -125,6 +125,11 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <SEOHead 
+        title={`Contact ${siteSettings?.companyInfo?.name || 'G.M.B Travels Kashmir'} - Get in Touch`}
+        description="Contact G.M.B Travels Kashmir for Kashmir tour packages, cab bookings, and travel planning. Multiple ways to reach us for your dream Kashmir vacation."
+        keywords={['contact', 'Kashmir travel', 'tour inquiry', 'travel planning', 'Kashmir tours contact']}
+      />
       {/* Hero Section */}
       <section className="relative py-20 bg-gradient-to-r from-slate-800 to-slate-700">
         <div className="container mx-auto px-4">
