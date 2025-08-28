@@ -337,7 +337,9 @@ const Blog = () => {
                         </div>
                       </div>
                       <Button variant="ghost" size="sm" className="text-amber-600 hover:text-amber-700">
-                        Read More
+                        <Link to={`/blog/${post.slug}`}>
+                          Read More
+                        </Link>
                       </Button>
                     </div>
                   </CardContent>
