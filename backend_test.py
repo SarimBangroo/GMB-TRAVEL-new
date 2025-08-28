@@ -106,166 +106,369 @@ class APITester:
             self.log_test("Token Verification", False, f"Exception during verification: {str(e)}")
             return False
     
-    def test_public_site_settings(self):
-        """Test GET /api/site-settings (public endpoint)"""
-        print("\n=== Testing Public Site Settings Endpoint ===")
+    def test_team_member_login_manager(self):
+        """Test team member login with manager credentials"""
+        print("\n=== Testing Team Manager Login ===")
+        
+        try:
+            login_data = {
+                "username": TEAM_MANAGER_USERNAME,
+                "password": TEAM_MANAGER_PASSWORD
+            }
+            
+            response = self.session.post(f"{self.base_url}/team/login", json=login_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data:
+                    self.team_manager_token = data["access_token"]
+                    self.log_test("Team Manager Login", True, f"Successfully authenticated manager: {TEAM_MANAGER_USERNAME}")
+                    return True
+                else:
+                    self.log_test("Team Manager Login", False, "No access token in response", data)
+                    return False
+            else:
+                self.log_test("Team Manager Login", False, f"Login failed with status {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Team Manager Login", False, f"Exception during login: {str(e)}")
+            return False
+    
+    def test_team_member_login_agent(self):
+        """Test team member login with agent credentials"""
+        print("\n=== Testing Team Agent Login ===")
+        
+        try:
+            login_data = {
+                "username": TEAM_AGENT_USERNAME,
+                "password": TEAM_AGENT_PASSWORD
+            }
+            
+            response = self.session.post(f"{self.base_url}/team/login", json=login_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "access_token" in data:
+                    self.team_agent_token = data["access_token"]
+                    self.log_test("Team Agent Login", True, f"Successfully authenticated agent: {TEAM_AGENT_USERNAME}")
+                    return True
+                else:
+                    self.log_test("Team Agent Login", False, "No access token in response", data)
+                    return False
+            else:
+                self.log_test("Team Agent Login", False, f"Login failed with status {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Team Agent Login", False, f"Exception during login: {str(e)}")
+            return False
+    
+    def test_admin_get_team_members(self):
+        """Test GET /api/admin/team (admin endpoint)"""
+        print("\n=== Testing Admin Get Team Members ===")
+        
+        if not self.admin_token:
+            self.log_test("Admin Get Team Members", False, "No admin token available")
+            return False
+            
+        try:
+            # Set admin auth header
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            response = requests.get(f"{self.base_url}/admin/team", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if isinstance(data, list):
+                    self.log_test("Admin Get Team Members", True, f"Successfully retrieved {len(data)} team members")
+                    return True
+                else:
+                    self.log_test("Admin Get Team Members", False, "Response is not a list", data)
+                    return False
+            else:
+                self.log_test("Admin Get Team Members", False, f"Request failed with status {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Get Team Members", False, f"Exception during request: {str(e)}")
+            return False
+    
+    def test_admin_create_team_member(self):
+        """Test POST /api/admin/team (admin endpoint)"""
+        print("\n=== Testing Admin Create Team Member ===")
+        
+        if not self.admin_token:
+            self.log_test("Admin Create Team Member", False, "No admin token available")
+            return False
+            
+        try:
+            # Create test team member data
+            team_data = {
+                "fullName": "Test Employee",
+                "email": "test.employee@gmbtravelskashmir.com",
+                "phone": "+91 98765 43299",
+                "username": "test_employee",
+                "password": "testpass123",
+                "role": "agent",
+                "department": "Sales",
+                "joiningDate": datetime.utcnow().isoformat(),
+                "isActive": True
+            }
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            response = requests.post(f"{self.base_url}/admin/team", json=team_data, headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "id" in data and data.get("fullName") == "Test Employee":
+                    self.created_team_member_id = data["id"]
+                    self.log_test("Admin Create Team Member", True, f"Successfully created team member with ID: {self.created_team_member_id}")
+                    return True
+                else:
+                    self.log_test("Admin Create Team Member", False, "Invalid response format", data)
+                    return False
+            else:
+                self.log_test("Admin Create Team Member", False, f"Request failed with status {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Create Team Member", False, f"Exception during request: {str(e)}")
+            return False
+    
+    def test_admin_update_team_member(self):
+        """Test PUT /api/admin/team/{id} (admin endpoint)"""
+        print("\n=== Testing Admin Update Team Member ===")
+        
+        if not self.admin_token or not self.created_team_member_id:
+            self.log_test("Admin Update Team Member", False, "No admin token or team member ID available")
+            return False
+            
+        try:
+            # Update team member data
+            update_data = {
+                "fullName": "Test Employee Updated",
+                "department": "Marketing",
+                "isActive": True
+            }
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            response = requests.put(f"{self.base_url}/admin/team/{self.created_team_member_id}", json=update_data, headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if data.get("fullName") == "Test Employee Updated" and data.get("department") == "Marketing":
+                    self.log_test("Admin Update Team Member", True, "Successfully updated team member")
+                    return True
+                else:
+                    self.log_test("Admin Update Team Member", False, "Update not applied correctly", data)
+                    return False
+            else:
+                self.log_test("Admin Update Team Member", False, f"Request failed with status {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Update Team Member", False, f"Exception during request: {str(e)}")
+            return False
+    
+    def test_admin_change_team_password(self):
+        """Test POST /api/admin/team/{id}/change-password (admin endpoint)"""
+        print("\n=== Testing Admin Change Team Password ===")
+        
+        if not self.admin_token or not self.created_team_member_id:
+            self.log_test("Admin Change Team Password", False, "No admin token or team member ID available")
+            return False
+            
+        try:
+            # Change password data
+            password_data = {"new_password": "newpassword123"}
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            response = requests.post(f"{self.base_url}/admin/team/{self.created_team_member_id}/change-password", 
+                                   data=password_data, headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if "message" in data and "successfully" in data["message"].lower():
+                    self.log_test("Admin Change Team Password", True, "Successfully changed team member password")
+                    return True
+                else:
+                    self.log_test("Admin Change Team Password", False, "Invalid response format", data)
+                    return False
+            else:
+                self.log_test("Admin Change Team Password", False, f"Request failed with status {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Change Team Password", False, f"Exception during request: {str(e)}")
+            return False
+    
+    def test_get_active_popups_public(self):
+        """Test GET /api/popups (public endpoint)"""
+        print("\n=== Testing Get Active Popups (Public) ===")
         
         try:
             # Use a new session without auth headers for public endpoint
             public_session = requests.Session()
-            response = public_session.get(f"{self.base_url}/site-settings")
+            response = public_session.get(f"{self.base_url}/popups")
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Validate response structure
-                required_fields = ["contactInfo", "socialMedia", "companyInfo", "heroSection", "mapSettings", "seoSettings", "businessStats"]
-                missing_fields = [field for field in required_fields if field not in data]
-                
-                if not missing_fields:
-                    # Check some key nested fields
-                    contact_info = data.get("contactInfo", {})
-                    company_info = data.get("companyInfo", {})
-                    
-                    if contact_info.get("phone") and company_info.get("name"):
-                        self.log_test("Public Site Settings", True, "Successfully retrieved site settings with proper structure")
-                        return True
-                    else:
-                        self.log_test("Public Site Settings", False, "Missing key nested fields in response", data)
-                        return False
-                else:
-                    self.log_test("Public Site Settings", False, f"Missing required fields: {missing_fields}", data)
-                    return False
-            else:
-                self.log_test("Public Site Settings", False, f"Request failed with status {response.status_code}", response.json() if response.content else None)
-                return False
-                
-        except Exception as e:
-            self.log_test("Public Site Settings", False, f"Exception during request: {str(e)}")
-            return False
-    
-    def test_admin_get_site_settings(self):
-        """Test GET /api/admin/site-settings (admin endpoint)"""
-        print("\n=== Testing Admin Get Site Settings Endpoint ===")
-        
-        if not self.admin_token:
-            self.log_test("Admin Get Site Settings", False, "No admin token available")
-            return False
-            
-        try:
-            response = self.session.get(f"{self.base_url}/admin/site-settings")
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Validate response structure (same as public but with admin access)
-                required_fields = ["contactInfo", "socialMedia", "companyInfo", "heroSection", "mapSettings", "seoSettings", "businessStats"]
-                missing_fields = [field for field in required_fields if field not in data]
-                
-                if not missing_fields:
-                    self.log_test("Admin Get Site Settings", True, "Successfully retrieved site settings via admin endpoint")
+                if isinstance(data, list):
+                    self.log_test("Get Active Popups (Public)", True, f"Successfully retrieved {len(data)} active popups")
                     return True
                 else:
-                    self.log_test("Admin Get Site Settings", False, f"Missing required fields: {missing_fields}", data)
+                    self.log_test("Get Active Popups (Public)", False, "Response is not a list", data)
                     return False
             else:
-                self.log_test("Admin Get Site Settings", False, f"Request failed with status {response.status_code}", response.json() if response.content else None)
+                self.log_test("Get Active Popups (Public)", False, f"Request failed with status {response.status_code}", response.json() if response.content else None)
                 return False
                 
         except Exception as e:
-            self.log_test("Admin Get Site Settings", False, f"Exception during request: {str(e)}")
+            self.log_test("Get Active Popups (Public)", False, f"Exception during request: {str(e)}")
             return False
     
-    def test_admin_update_site_settings(self):
-        """Test PUT /api/admin/site-settings (admin endpoint)"""
-        print("\n=== Testing Admin Update Site Settings Endpoint ===")
+    def test_admin_get_all_popups(self):
+        """Test GET /api/admin/popups (admin endpoint)"""
+        print("\n=== Testing Admin Get All Popups ===")
         
         if not self.admin_token:
-            self.log_test("Admin Update Site Settings", False, "No admin token available")
+            self.log_test("Admin Get All Popups", False, "No admin token available")
             return False
             
         try:
-            # First get current settings
-            get_response = self.session.get(f"{self.base_url}/admin/site-settings")
-            if get_response.status_code != 200:
-                self.log_test("Admin Update Site Settings", False, "Could not retrieve current settings for update test")
-                return False
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            response = requests.get(f"{self.base_url}/admin/popups", headers=headers)
             
-            # Prepare update data with some changes
-            update_data = {
-                "companyInfo": {
-                    "name": "G.M.B Travels Kashmir - Updated",
-                    "tagline": "Discover Paradise on Earth - Test Update",
-                    "description": "Updated description for testing purposes"
-                },
-                "contactInfo": {
-                    "phone": ["+91 98765 43210", "+91 98765 43211", "+91 98765 43212"],
-                    "email": ["info@gmbtravelskashmir.com", "bookings@gmbtravelskashmir.com"],
-                    "address": ["Main Office: Srinagar, Kashmir, India - Updated", "Branch: Dal Lake Area"],
-                    "workingHours": ["Mon - Sat: 9:00 AM - 8:00 PM", "Sun: 10:00 AM - 6:00 PM"],
-                    "whatsapp": "+919876543210"
-                }
+            if response.status_code == 200:
+                data = response.json()
+                
+                if isinstance(data, list):
+                    self.log_test("Admin Get All Popups", True, f"Successfully retrieved {len(data)} popups")
+                    return True
+                else:
+                    self.log_test("Admin Get All Popups", False, "Response is not a list", data)
+                    return False
+            else:
+                self.log_test("Admin Get All Popups", False, f"Request failed with status {response.status_code}", response.json() if response.content else None)
+                return False
+                
+        except Exception as e:
+            self.log_test("Admin Get All Popups", False, f"Exception during request: {str(e)}")
+            return False
+    
+    def test_admin_create_popup(self):
+        """Test POST /api/admin/popups (admin endpoint)"""
+        print("\n=== Testing Admin Create Popup ===")
+        
+        if not self.admin_token:
+            self.log_test("Admin Create Popup", False, "No admin token available")
+            return False
+            
+        try:
+            # Create test popup data
+            popup_data = {
+                "title": "Special Kashmir Tour Offer",
+                "content": "Book now and get 20% off on all Kashmir tour packages! Limited time offer.",
+                "popupType": "offer",
+                "backgroundColor": "#f0f9ff",
+                "textColor": "#1e40af",
+                "buttonText": "Book Now",
+                "buttonColor": "#f59e0b",
+                "showOnPages": ["home", "packages"],
+                "displayDuration": 8000,
+                "cookieExpiry": 48,
+                "startDate": datetime.utcnow().isoformat(),
+                "endDate": (datetime.utcnow() + timedelta(days=30)).isoformat()
             }
             
-            response = self.session.put(f"{self.base_url}/admin/site-settings", json=update_data)
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            response = requests.post(f"{self.base_url}/admin/popups", json=popup_data, headers=headers)
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Verify the update was applied
-                if (data.get("companyInfo", {}).get("name") == "G.M.B Travels Kashmir - Updated" and
-                    data.get("companyInfo", {}).get("tagline") == "Discover Paradise on Earth - Test Update"):
-                    self.log_test("Admin Update Site Settings", True, "Successfully updated site settings")
+                if "id" in data and data.get("title") == "Special Kashmir Tour Offer":
+                    self.created_popup_id = data["id"]
+                    self.log_test("Admin Create Popup", True, f"Successfully created popup with ID: {self.created_popup_id}")
                     return True
                 else:
-                    self.log_test("Admin Update Site Settings", False, "Update did not apply correctly", data)
+                    self.log_test("Admin Create Popup", False, "Invalid response format", data)
                     return False
             else:
-                self.log_test("Admin Update Site Settings", False, f"Update failed with status {response.status_code}", response.json() if response.content else None)
+                self.log_test("Admin Create Popup", False, f"Request failed with status {response.status_code}", response.json() if response.content else None)
                 return False
                 
         except Exception as e:
-            self.log_test("Admin Update Site Settings", False, f"Exception during update: {str(e)}")
+            self.log_test("Admin Create Popup", False, f"Exception during request: {str(e)}")
             return False
     
-    def test_admin_reset_site_settings(self):
-        """Test POST /api/admin/site-settings/reset (admin endpoint)"""
-        print("\n=== Testing Admin Reset Site Settings Endpoint ===")
+    def test_admin_update_popup(self):
+        """Test PUT /api/admin/popups/{id} (admin endpoint)"""
+        print("\n=== Testing Admin Update Popup ===")
         
-        if not self.admin_token:
-            self.log_test("Admin Reset Site Settings", False, "No admin token available")
+        if not self.admin_token or not self.created_popup_id:
+            self.log_test("Admin Update Popup", False, "No admin token or popup ID available")
             return False
             
         try:
-            response = self.session.post(f"{self.base_url}/admin/site-settings/reset")
+            # Update popup data
+            update_data = {
+                "title": "Updated Kashmir Tour Offer",
+                "content": "Book now and get 25% off on all Kashmir tour packages! Extended offer.",
+                "backgroundColor": "#fef3c7",
+                "isActive": True
+            }
+            
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            response = requests.put(f"{self.base_url}/admin/popups/{self.created_popup_id}", json=update_data, headers=headers)
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Verify reset response
-                if "message" in data and "settings" in data:
-                    settings = data["settings"]
-                    
-                    # Check if settings were reset to defaults
-                    if (settings.get("companyInfo", {}).get("name") == "G.M.B Travels Kashmir" and
-                        settings.get("companyInfo", {}).get("tagline") == "Discover Paradise on Earth"):
-                        self.log_test("Admin Reset Site Settings", True, "Successfully reset site settings to defaults")
-                        return True
-                    else:
-                        self.log_test("Admin Reset Site Settings", False, "Settings not properly reset to defaults", data)
-                        return False
+                if data.get("title") == "Updated Kashmir Tour Offer" and "25% off" in data.get("content", ""):
+                    self.log_test("Admin Update Popup", True, "Successfully updated popup")
+                    return True
                 else:
-                    self.log_test("Admin Reset Site Settings", False, "Invalid reset response format", data)
+                    self.log_test("Admin Update Popup", False, "Update not applied correctly", data)
                     return False
             else:
-                self.log_test("Admin Reset Site Settings", False, f"Reset failed with status {response.status_code}", response.json() if response.content else None)
+                self.log_test("Admin Update Popup", False, f"Request failed with status {response.status_code}", response.json() if response.content else None)
                 return False
                 
         except Exception as e:
-            self.log_test("Admin Reset Site Settings", False, f"Exception during reset: {str(e)}")
+            self.log_test("Admin Update Popup", False, f"Exception during request: {str(e)}")
             return False
     
-    def test_unauthorized_access(self):
+    def test_role_based_authentication(self):
+        """Test role-based authentication and access control"""
+        print("\n=== Testing Role-Based Authentication ===")
+        
+        try:
+            # Test that team members cannot access admin endpoints
+            if self.team_manager_token:
+                headers = {"Authorization": f"Bearer {self.team_manager_token}"}
+                response = requests.get(f"{self.base_url}/admin/team", headers=headers)
+                
+                if response.status_code in [401, 403]:
+                    self.log_test("Role-Based Authentication", True, "Team member properly blocked from admin endpoints")
+                    return True
+                else:
+                    self.log_test("Role-Based Authentication", False, f"Team member accessed admin endpoint (status: {response.status_code})")
+                    return False
+            else:
+                self.log_test("Role-Based Authentication", False, "No team member token available for testing")
+                return False
+                
+        except Exception as e:
+            self.log_test("Role-Based Authentication", False, f"Exception during test: {str(e)}")
+            return False
+    
+    def test_unauthorized_access_protection(self):
         """Test that admin endpoints require authentication"""
         print("\n=== Testing Unauthorized Access Protection ===")
         
@@ -275,16 +478,18 @@ class APITester:
             
             # Test admin endpoints without authentication
             admin_endpoints = [
-                "/admin/site-settings",
-                "/admin/site-settings/reset"
+                ("/admin/team", "GET"),
+                ("/admin/team", "POST"),
+                ("/admin/popups", "GET"),
+                ("/admin/popups", "POST")
             ]
             
             all_protected = True
-            for endpoint in admin_endpoints:
-                if endpoint.endswith("/reset"):
-                    response = unauth_session.post(f"{self.base_url}{endpoint}")
-                else:
+            for endpoint, method in admin_endpoints:
+                if method == "GET":
                     response = unauth_session.get(f"{self.base_url}{endpoint}")
+                elif method == "POST":
+                    response = unauth_session.post(f"{self.base_url}{endpoint}", json={})
                 
                 if response.status_code not in [401, 403]:
                     self.log_test("Unauthorized Access Protection", False, f"Endpoint {endpoint} not properly protected (status: {response.status_code})")
@@ -298,24 +503,100 @@ class APITester:
                 return False
                 
         except Exception as e:
-            self.log_test("Unauthorized Access Protection", False, f"Exception during unauthorized access test: {str(e)}")
+            self.log_test("Unauthorized Access Protection", False, f"Exception during test: {str(e)}")
             return False
     
+    def test_integration_flow(self):
+        """Test complete integration flow"""
+        print("\n=== Testing Integration Flow ===")
+        
+        try:
+            # Test: Admin creates popup -> Public endpoint returns active popups
+            if self.created_popup_id:
+                # Check if created popup appears in public endpoint
+                public_session = requests.Session()
+                response = public_session.get(f"{self.base_url}/popups")
+                
+                if response.status_code == 200:
+                    popups = response.json()
+                    popup_found = any(popup.get("id") == self.created_popup_id for popup in popups)
+                    
+                    if popup_found:
+                        self.log_test("Integration Flow", True, "Created popup successfully appears in public endpoint")
+                        return True
+                    else:
+                        self.log_test("Integration Flow", False, "Created popup not found in public endpoint")
+                        return False
+                else:
+                    self.log_test("Integration Flow", False, f"Public popups endpoint failed (status: {response.status_code})")
+                    return False
+            else:
+                self.log_test("Integration Flow", False, "No popup created for integration test")
+                return False
+                
+        except Exception as e:
+            self.log_test("Integration Flow", False, f"Exception during integration test: {str(e)}")
+            return False
+    
+    def cleanup_test_data(self):
+        """Clean up test data created during testing"""
+        print("\n=== Cleaning Up Test Data ===")
+        
+        try:
+            if not self.admin_token:
+                return
+                
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
+            
+            # Delete created team member
+            if self.created_team_member_id:
+                response = requests.delete(f"{self.base_url}/admin/team/{self.created_team_member_id}", headers=headers)
+                if response.status_code == 200:
+                    self.log_test("Cleanup Team Member", True, "Successfully deleted test team member")
+                else:
+                    self.log_test("Cleanup Team Member", False, f"Failed to delete team member (status: {response.status_code})")
+            
+            # Delete created popup
+            if self.created_popup_id:
+                response = requests.delete(f"{self.base_url}/admin/popups/{self.created_popup_id}", headers=headers)
+                if response.status_code == 200:
+                    self.log_test("Cleanup Popup", True, "Successfully deleted test popup")
+                else:
+                    self.log_test("Cleanup Popup", False, f"Failed to delete popup (status: {response.status_code})")
+                    
+        except Exception as e:
+            self.log_test("Cleanup", False, f"Exception during cleanup: {str(e)}")
+    
     def run_all_tests(self):
-        """Run all Site Settings API tests"""
-        print("🚀 Starting Site Settings API Test Suite")
+        """Run all Team Management and Popup Management API tests"""
+        print("🚀 Starting Team Management and Popup Management API Test Suite")
         print(f"Base URL: {self.base_url}")
-        print("=" * 60)
+        print("=" * 80)
         
         # Test sequence
         tests = [
+            # Authentication tests
             self.test_admin_authentication,
             self.test_token_verification,
-            self.test_public_site_settings,
-            self.test_admin_get_site_settings,
-            self.test_admin_update_site_settings,
-            self.test_admin_reset_site_settings,
-            self.test_unauthorized_access
+            
+            # Team Management tests
+            self.test_team_member_login_manager,
+            self.test_team_member_login_agent,
+            self.test_admin_get_team_members,
+            self.test_admin_create_team_member,
+            self.test_admin_update_team_member,
+            self.test_admin_change_team_password,
+            
+            # Popup Management tests
+            self.test_get_active_popups_public,
+            self.test_admin_get_all_popups,
+            self.test_admin_create_popup,
+            self.test_admin_update_popup,
+            
+            # Security and Integration tests
+            self.test_role_based_authentication,
+            self.test_unauthorized_access_protection,
+            self.test_integration_flow
         ]
         
         passed = 0
@@ -325,10 +606,13 @@ class APITester:
             if test():
                 passed += 1
         
+        # Cleanup test data
+        self.cleanup_test_data()
+        
         # Print summary
-        print("\n" + "=" * 60)
+        print("\n" + "=" * 80)
         print("📊 TEST SUMMARY")
-        print("=" * 60)
+        print("=" * 80)
         print(f"Total Tests: {total}")
         print(f"Passed: {passed}")
         print(f"Failed: {total - passed}")
