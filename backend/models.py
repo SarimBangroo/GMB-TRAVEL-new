@@ -458,3 +458,266 @@ class PopupUpdate(BaseModel):
     startDate: Optional[datetime] = None
     endDate: Optional[datetime] = None
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+# Enhanced CRM Models
+class CommunicationType(str, Enum):
+    email = "email"
+    phone = "phone" 
+    whatsapp = "whatsapp"
+    sms = "sms"
+    in_person = "in_person"
+
+class ClientStatus(str, Enum):
+    lead = "lead"
+    interested = "interested"
+    confirmed = "confirmed"
+    completed = "completed"
+    cancelled = "cancelled"
+
+class FollowUpStatus(str, Enum):
+    pending = "pending"
+    completed = "completed"
+    cancelled = "cancelled"
+
+class Communication(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: CommunicationType
+    direction: str  # "inbound" or "outbound"
+    subject: Optional[str] = None
+    message: str
+    status: str = "completed"
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    scheduledFor: Optional[datetime] = None
+    completedAt: Optional[datetime] = None
+    attachments: List[str] = []
+    notes: Optional[str] = None
+
+class FollowUp(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: CommunicationType
+    scheduledDate: datetime
+    message: str
+    status: FollowUpStatus = FollowUpStatus.pending
+    priority: str = "medium"  # low, medium, high
+    assignedTo: Optional[str] = None  # team member ID
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    completedAt: Optional[datetime] = None
+    notes: Optional[str] = None
+
+class Review(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    rating: int  # 1-5
+    title: str
+    content: str
+    packageName: Optional[str] = None
+    isPublic: bool = False
+    isApproved: bool = False
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    approvedAt: Optional[datetime] = None
+    images: List[str] = []
+
+class Client(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    name: str
+    email: EmailStr
+    phone: str
+    whatsapp: Optional[str] = None
+    address: Optional[str] = None
+    interests: Optional[str] = None
+    budget: Optional[str] = None
+    source: str = "website"  # website, referral, social_media, advertisement, walk_in
+    status: ClientStatus = ClientStatus.lead
+    preferredContact: CommunicationType = CommunicationType.phone
+    notes: Optional[str] = None
+    tags: List[str] = []
+    
+    # Enhanced CRM fields
+    communicationHistory: List[Communication] = []
+    followUps: List[FollowUp] = []
+    reviews: List[Review] = []
+    totalSpent: float = 0
+    bookings: int = 0
+    
+    # Metadata
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+    lastContact: Optional[datetime] = None
+    assignedTo: Optional[str] = None  # team member ID
+
+    class Config:
+        populate_by_name = True
+
+class ClientCreate(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str
+    whatsapp: Optional[str] = None
+    address: Optional[str] = None
+    interests: Optional[str] = None
+    budget: Optional[str] = None
+    source: str = "website"
+    status: ClientStatus = ClientStatus.lead
+    preferredContact: CommunicationType = CommunicationType.phone
+    notes: Optional[str] = None
+    tags: List[str] = []
+    assignedTo: Optional[str] = None
+
+class ClientUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+    whatsapp: Optional[str] = None
+    address: Optional[str] = None
+    interests: Optional[str] = None
+    budget: Optional[str] = None
+    source: Optional[str] = None
+    status: Optional[ClientStatus] = None
+    preferredContact: Optional[CommunicationType] = None
+    notes: Optional[str] = None
+    tags: Optional[List[str]] = None
+    totalSpent: Optional[float] = None
+    bookings: Optional[int] = None
+    assignedTo: Optional[str] = None
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+class CommunicationCreate(BaseModel):
+    type: CommunicationType
+    direction: str
+    subject: Optional[str] = None
+    message: str
+    scheduledFor: Optional[datetime] = None
+    attachments: List[str] = []
+    notes: Optional[str] = None
+
+class FollowUpCreate(BaseModel):
+    type: CommunicationType
+    scheduledDate: datetime
+    message: str
+    priority: str = "medium"
+    assignedTo: Optional[str] = None
+    notes: Optional[str] = None
+
+class ReviewCreate(BaseModel):
+    rating: int
+    title: str
+    content: str
+    packageName: Optional[str] = None
+    images: List[str] = []
+
+# Blog Management Models
+class BlogStatus(str, Enum):
+    draft = "draft"
+    pending_approval = "pending_approval"
+    approved = "approved"
+    published = "published"
+    archived = "archived"
+
+class BlogCategory(str, Enum):
+    destinations = "destinations"
+    travel_tips = "travel_tips"
+    culture = "culture"
+    adventure = "adventure"
+    photography = "photography"
+    seasonal = "seasonal"
+    news = "news"
+
+class BlogPost(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    title: str
+    slug: str
+    content: str
+    excerpt: str
+    category: BlogCategory
+    tags: List[str] = []
+    status: BlogStatus = BlogStatus.draft
+    
+    # SEO fields
+    metaTitle: Optional[str] = None
+    metaDescription: Optional[str] = None
+    seoKeywords: List[str] = []
+    
+    # Media
+    featuredImage: Optional[str] = None
+    images: List[str] = []
+    
+    # AI generation metadata
+    isAIGenerated: bool = False
+    aiModel: Optional[str] = None
+    generationPrompt: Optional[str] = None
+    
+    # Publishing
+    publishedAt: Optional[datetime] = None
+    scheduledFor: Optional[datetime] = None
+    
+    # Authorship
+    authorId: Optional[str] = None  # team member who created/approved
+    approvedBy: Optional[str] = None  # admin who approved
+    
+    # Analytics
+    views: int = 0
+    likes: int = 0
+    shares: int = 0
+    
+    # Metadata
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
+
+class BlogPostCreate(BaseModel):
+    title: str
+    content: str
+    excerpt: str
+    category: BlogCategory
+    tags: List[str] = []
+    metaTitle: Optional[str] = None
+    metaDescription: Optional[str] = None
+    seoKeywords: List[str] = []
+    featuredImage: Optional[str] = None
+    images: List[str] = []
+    scheduledFor: Optional[datetime] = None
+
+class BlogPostUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    excerpt: Optional[str] = None
+    category: Optional[BlogCategory] = None
+    tags: Optional[List[str]] = None
+    status: Optional[BlogStatus] = None
+    metaTitle: Optional[str] = None
+    metaDescription: Optional[str] = None
+    seoKeywords: Optional[List[str]] = None
+    featuredImage: Optional[str] = None
+    images: Optional[List[str]] = None
+    publishedAt: Optional[datetime] = None
+    scheduledFor: Optional[datetime] = None
+    approvedBy: Optional[str] = None
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+class AIBlogRequest(BaseModel):
+    topic: str
+    category: BlogCategory
+    keywords: List[str] = []
+    targetLength: int = 1500  # words
+    tone: str = "informative"  # informative, casual, professional, exciting
+    includeImages: bool = True
+    focusAreas: List[str] = []  # specific aspects to focus on
+
+class BlogGenerationSettings(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    isAutoGenerationEnabled: bool = False
+    generationFrequency: str = "weekly"  # daily, weekly, bi-weekly, monthly
+    preferredCategories: List[BlogCategory] = []
+    autoApprovalEnabled: bool = False
+    aiModel: str = "gpt-4o-mini"
+    aiProvider: str = "openai"
+    defaultTone: str = "informative"
+    defaultLength: int = 1500
+    lastGenerated: Optional[datetime] = None
+    nextScheduled: Optional[datetime] = None
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
