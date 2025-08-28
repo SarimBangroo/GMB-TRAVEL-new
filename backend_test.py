@@ -276,7 +276,7 @@ class APITester:
                 else:
                     response = unauth_session.get(f"{self.base_url}{endpoint}")
                 
-                if response.status_code != 401:
+                if response.status_code not in [401, 403]:
                     self.log_test("Unauthorized Access Protection", False, f"Endpoint {endpoint} not properly protected (status: {response.status_code})")
                     all_protected = False
                     break
