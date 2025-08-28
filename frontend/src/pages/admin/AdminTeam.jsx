@@ -21,9 +21,12 @@ import {
   UserPlus,
   Settings,
   CheckCircle,
-  XCircle
+  XCircle,
+  Key,
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 const AdminTeam = () => {
   const navigate = useNavigate();
@@ -32,8 +35,11 @@ const AdminTeam = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
+  const [changingPasswordMember, setChangingPasswordMember] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
   const [teamForm, setTeamForm] = useState({
     fullName: '',
     email: '',
@@ -58,71 +64,13 @@ const AdminTeam = () => {
   const fetchTeamMembers = async () => {
     try {
       setIsLoading(true);
-      // Mock data for now - replace with actual API call
-      const mockTeamMembers = [
-        {
-          id: '1',
-          fullName: 'Admin User',
-          email: 'admin@gmbtravelskashmir.com',
-          phone: '+91 98765 43210',
-          username: 'admin',
-          role: 'admin',
-          department: 'Management',
-          joiningDate: '2024-01-01',
-          isActive: true,
-          lastLogin: '2024-11-27T10:30:00Z',
-          packagesCreated: 15,
-          clientsManaged: 45,
-          avatar: null
-        },
-        {
-          id: '2',
-          fullName: 'Rajesh Kumar',
-          email: 'rajesh.manager@gmbtravelskashmir.com',
-          phone: '+91 87654 32109',
-          username: 'rajesh_manager',
-          role: 'manager',
-          department: 'Operations',
-          joiningDate: '2024-02-15',
-          isActive: true,
-          lastLogin: '2024-11-26T15:45:00Z',
-          packagesCreated: 12,
-          clientsManaged: 38,
-          avatar: null
-        },
-        {
-          id: '3',
-          fullName: 'Priya Sharma',
-          email: 'priya.agent@gmbtravelskashmir.com',
-          phone: '+91 76543 21098',
-          username: 'priya_agent',
-          role: 'agent',
-          department: 'Sales',
-          joiningDate: '2024-03-10',
-          isActive: true,
-          lastLogin: '2024-11-27T09:20:00Z',
-          packagesCreated: 8,
-          clientsManaged: 28,
-          avatar: null
-        },
-        {
-          id: '4',
-          fullName: 'Amit Patel',
-          email: 'amit.agent@gmbtravelskashmir.com',
-          phone: '+91 65432 10987',
-          username: 'amit_agent',
-          role: 'agent',
-          department: 'Customer Support',
-          joiningDate: '2024-04-05',
-          isActive: false,
-          lastLogin: '2024-11-20T14:30:00Z',
-          packagesCreated: 5,
-          clientsManaged: 15,
-          avatar: null
-        }
-      ];
-      setTeamMembers(mockTeamMembers);
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/admin/team`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTeamMembers(response.data);
     } catch (error) {
+      console.error('Error fetching team members:', error);
       toast.error('Failed to fetch team members');
     } finally {
       setIsLoading(false);
@@ -152,34 +100,35 @@ const AdminTeam = () => {
     e.preventDefault();
     
     try {
+      const token = localStorage.getItem('adminToken');
+      
       if (editingMember) {
-        // Update team member
-        setTeamMembers(prev => 
-          prev.map(member => 
-            member.id === editingMember.id 
-              ? { ...member, ...teamForm, packagesCreated: member.packagesCreated, clientsManaged: member.clientsManaged }
-              : member
-          )
+        // Update existing member
+        const updateData = { ...teamForm };
+        delete updateData.password; // Don't send password on update
+        
+        await axios.put(
+          `${process.env.REACT_APP_BACKEND_URL}/admin/team/${editingMember.id}`,
+          updateData,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success('Team member updated successfully!');
       } else {
-        // Create new team member
-        const newMember = {
-          id: Date.now().toString(),
-          ...teamForm,
-          lastLogin: null,
-          packagesCreated: 0,
-          clientsManaged: 0,
-          avatar: null
-        };
-        setTeamMembers(prev => [newMember, ...prev]);
-        toast.success('Team member added successfully!');
+        // Create new member
+        await axios.post(
+          `${process.env.REACT_APP_BACKEND_URL}/admin/team`,
+          teamForm,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Team member created successfully!');
       }
       
-      resetForm();
       setIsDialogOpen(false);
+      resetForm();
+      fetchTeamMembers();
     } catch (error) {
-      toast.error('Failed to save team member');
+      console.error('Error saving team member:', error);
+      toast.error(error.response?.data?.detail || 'Failed to save team member');
     }
   };
 
@@ -190,39 +139,64 @@ const AdminTeam = () => {
       email: member.email,
       phone: member.phone,
       username: member.username,
-      password: '', // Don't populate password for security
+      password: '', // Don't populate password
       role: member.role,
       department: member.department,
-      joiningDate: member.joiningDate,
+      joiningDate: member.joiningDate.split('T')[0], // Format date for input
       isActive: member.isActive
     });
     setIsDialogOpen(true);
   };
 
   const handleDelete = async (memberId) => {
-    if (window.confirm('Are you sure you want to delete this team member?')) {
-      try {
-        setTeamMembers(prev => prev.filter(member => member.id !== memberId));
-        toast.success('Team member deleted successfully');
-      } catch (error) {
-        toast.error('Failed to delete team member');
-      }
+    if (!window.confirm('Are you sure you want to delete this team member? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      await axios.delete(`${process.env.REACT_APP_BACKEND_URL}/admin/team/${memberId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Team member deleted successfully!');
+      fetchTeamMembers();
+    } catch (error) {
+      console.error('Error deleting team member:', error);
+      toast.error('Failed to delete team member');
     }
   };
 
-  const toggleMemberStatus = async (memberId) => {
-    try {
-      setTeamMembers(prev => 
-        prev.map(member => 
-          member.id === memberId 
-            ? { ...member, isActive: !member.isActive }
-            : member
-        )
-      );
-      toast.success('Member status updated');
-    } catch (error) {
-      toast.error('Failed to update member status');
+  const handlePasswordChange = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
     }
+
+    try {
+      const token = localStorage.getItem('adminToken');
+      const formData = new FormData();
+      formData.append('new_password', newPassword);
+      
+      await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/admin/team/${changingPasswordMember.id}/change-password`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success('Password changed successfully!');
+      setIsPasswordDialogOpen(false);
+      setChangingPasswordMember(null);
+      setNewPassword('');
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error('Failed to change password');
+    }
+  };
+
+  const openPasswordDialog = (member) => {
+    setChangingPasswordMember(member);
+    setIsPasswordDialogOpen(true);
+    setNewPassword('');
   };
 
   const filteredMembers = teamMembers.filter(member => {
@@ -235,29 +209,31 @@ const AdminTeam = () => {
 
   const getRoleColor = (role) => {
     switch (role) {
-      case 'admin': return 'bg-red-100 text-red-700 border-red-200';
-      case 'manager': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'agent': return 'bg-green-100 text-green-700 border-green-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  };
-
-  const getRoleIcon = (role) => {
-    switch (role) {
-      case 'admin': return <Shield className="h-4 w-4" />;
-      case 'manager': return <Settings className="h-4 w-4" />;
-      case 'agent': return <Users className="h-4 w-4" />;
-      default: return <Users className="h-4 w-4" />;
+      case 'admin': return 'bg-red-100 text-red-800';
+      case 'manager': return 'bg-blue-100 text-blue-800';
+      case 'agent': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-amber-600" />
+          <p className="text-slate-600">Loading team members...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -273,146 +249,160 @@ const AdminTeam = () => {
                 </Button>
               </Link>
               <div className="flex items-center space-x-3">
-                <Users className="h-6 w-6 text-amber-600" />
+                <div className="p-2 bg-amber-100 rounded-lg">
+                  <Users className="h-6 w-6 text-amber-600" />
+                </div>
                 <div>
-                  <h1 className="text-xl font-bold text-slate-800">Team Management</h1>
-                  <p className="text-sm text-slate-600">Manage team members and user accounts</p>
+                  <h1 className="text-2xl font-bold text-slate-800">Team Management</h1>
+                  <p className="text-slate-600">Manage team members and their access levels</p>
                 </div>
               </div>
             </div>
+            
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={resetForm} className="bg-amber-600 hover:bg-amber-700">
+                <Button className="bg-amber-600 hover:bg-amber-700 text-white" onClick={() => resetForm()}>
                   <UserPlus className="h-4 w-4 mr-2" />
                   Add Team Member
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle>{editingMember ? 'Edit Team Member' : 'Add New Team Member'}</DialogTitle>
+                  <DialogTitle>
+                    {editingMember ? 'Edit Team Member' : 'Add New Team Member'}
+                  </DialogTitle>
                   <DialogDescription>
                     {editingMember ? 'Update team member information' : 'Fill in the details to add a new team member'}
                   </DialogDescription>
                 </DialogHeader>
                 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Full Name *</label>
+                      <label className="block text-sm font-medium mb-1">Full Name</label>
                       <Input
-                        type="text"
                         value={teamForm.fullName}
                         onChange={(e) => handleInputChange('fullName', e.target.value)}
+                        placeholder="Enter full name"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Email *</label>
+                      <label className="block text-sm font-medium mb-1">Username</label>
+                      <Input
+                        value={teamForm.username}
+                        onChange={(e) => handleInputChange('username', e.target.value)}
+                        placeholder="Enter username"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Email</label>
                       <Input
                         type="email"
                         value={teamForm.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
+                        placeholder="Enter email address"
                         required
                       />
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Phone Number *</label>
+                      <label className="block text-sm font-medium mb-1">Phone</label>
                       <Input
-                        type="tel"
                         value={teamForm.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
+                        placeholder="Enter phone number"
                         required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Department</label>
-                      <Input
-                        type="text"
-                        placeholder="e.g., Sales, Operations, Support"
-                        value={teamForm.department}
-                        onChange={(e) => handleInputChange('department', e.target.value)}
                       />
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {!editingMember && (
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Username *</label>
-                      <Input
-                        type="text"
-                        value={teamForm.username}
-                        onChange={(e) => handleInputChange('username', e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        {editingMember ? 'New Password (leave blank to keep current)' : 'Password *'}
-                      </label>
+                      <label className="block text-sm font-medium mb-1">Password</label>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
                           value={teamForm.password}
                           onChange={(e) => handleInputChange('password', e.target.value)}
+                          placeholder="Enter password"
                           required={!editingMember}
                         />
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
+                        </Button>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Role *</label>
+                      <label className="block text-sm font-medium mb-1">Role</label>
                       <Select value={teamForm.role} onValueChange={(value) => handleInputChange('role', value)}>
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="admin">Admin (Full Access)</SelectItem>
-                          <SelectItem value="manager">Manager (Manage Packages & Reports)</SelectItem>
-                          <SelectItem value="agent">Agent/Staff (Handle Clients)</SelectItem>
+                          <SelectItem value="agent">Agent</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Joining Date</label>
+                      <label className="block text-sm font-medium mb-1">Department</label>
                       <Input
-                        type="date"
-                        value={teamForm.joiningDate}
-                        onChange={(e) => handleInputChange('joiningDate', e.target.value)}
+                        value={teamForm.department}
+                        onChange={(e) => handleInputChange('department', e.target.value)}
+                        placeholder="Enter department"
+                        required
                       />
                     </div>
                   </div>
-
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Joining Date</label>
+                    <Input
+                      type="date"
+                      value={teamForm.joiningDate}
+                      onChange={(e) => handleInputChange('joiningDate', e.target.value)}
+                      required
+                    />
+                  </div>
+                  
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       id="isActive"
                       checked={teamForm.isActive}
                       onChange={(e) => handleInputChange('isActive', e.target.checked)}
-                      className="rounded border-slate-300"
+                      className="w-4 h-4 text-amber-600"
                     />
-                    <label htmlFor="isActive" className="text-sm text-slate-700">
-                      Active (user can login and access system)
+                    <label htmlFor="isActive" className="text-sm font-medium">
+                      Active Member
                     </label>
                   </div>
-
-                  <div className="flex justify-end space-x-4 pt-4 border-t">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" className="bg-amber-600 hover:bg-amber-700">
+                  
+                  <div className="flex space-x-3 pt-4">
+                    <Button type="submit" className="flex-1 bg-amber-600 hover:bg-amber-700">
                       {editingMember ? 'Update Member' : 'Add Member'}
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsDialogOpen(false)}
+                      className="flex-1"
+                    >
+                      Cancel
                     </Button>
                   </div>
                 </form>
@@ -422,90 +412,137 @@ const AdminTeam = () => {
         </div>
       </header>
 
+      {/* Password Change Dialog */}
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Change password for {changingPasswordMember?.fullName}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">New Password</label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password (min 6 characters)"
+                required
+              />
+            </div>
+            
+            <div className="flex space-x-3">
+              <Button 
+                onClick={handlePasswordChange}
+                className="flex-1 bg-amber-600 hover:bg-amber-700"
+              >
+                Change Password
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsPasswordDialogOpen(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="container mx-auto px-4 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="border-0 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Total Team Members</p>
+                  <p className="text-sm font-medium text-slate-600 mb-1">Total Members</p>
                   <p className="text-3xl font-bold text-slate-800">{teamMembers.length}</p>
                 </div>
-                <Users className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Admins</p>
-                  <p className="text-3xl font-bold text-red-600">
-                    {teamMembers.filter(m => m.role === 'admin').length}
-                  </p>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Users className="h-6 w-6 text-blue-600" />
                 </div>
-                <Shield className="h-8 w-8 text-red-600" />
               </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-0 shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Managers</p>
-                  <p className="text-3xl font-bold text-blue-600">
-                    {teamMembers.filter(m => m.role === 'manager').length}
-                  </p>
-                </div>
-                <Settings className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Active Members</p>
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-sm font-medium text-slate-600 mb-1">Active Members</p>
+                  <p className="text-3xl font-bold text-slate-800">
                     {teamMembers.filter(m => m.isActive).length}
                   </p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-600" />
+                <div className="p-3 bg-green-100 rounded-full">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600 mb-1">Managers</p>
+                  <p className="text-3xl font-bold text-slate-800">
+                    {teamMembers.filter(m => m.role === 'manager').length}
+                  </p>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <Shield className="h-6 w-6 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-600 mb-1">Agents</p>
+                  <p className="text-3xl font-bold text-slate-800">
+                    {teamMembers.filter(m => m.role === 'agent').length}
+                  </p>
+                </div>
+                <div className="p-3 bg-amber-100 rounded-full">
+                  <Users className="h-6 w-6 text-amber-600" />
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card className="mb-6">
+        {/* Filters and Search */}
+        <Card className="mb-6 border-0 shadow-lg">
           <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-              <div className="flex items-center space-x-2 w-full sm:w-auto">
-                <Search className="h-5 w-5 text-slate-400" />
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                  type="text"
                   placeholder="Search team members..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full sm:w-80"
+                  className="pl-10"
                 />
               </div>
-              
               <div className="flex items-center space-x-2">
-                <Filter className="h-5 w-5 text-slate-400" />
+                <Filter className="h-4 w-4 text-slate-600" />
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Filter by role" />
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="All Roles" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Roles</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="agent">Agent/Staff</SelectItem>
+                    <SelectItem value="agent">Agent</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -513,128 +550,121 @@ const AdminTeam = () => {
           </CardContent>
         </Card>
 
-        {/* Team Members Grid */}
-        {isLoading ? (
-          <Card>
+        {/* Team Members List */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredMembers.map((member) => (
+            <Card key={member.id} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={member.avatar} />
+                      <AvatarFallback className="bg-amber-100 text-amber-600 font-semibold">
+                        {member.fullName.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h4 className="font-semibold text-slate-800">{member.fullName}</h4>
+                      <p className="text-sm text-slate-600">@{member.username}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge className={getRoleColor(member.role)}>
+                      {member.role}
+                    </Badge>
+                    {member.isActive ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm text-slate-600">
+                    <span className="font-medium w-20">Email:</span>
+                    <span>{member.email}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-slate-600">
+                    <span className="font-medium w-20">Phone:</span>
+                    <span>{member.phone}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-slate-600">
+                    <span className="font-medium w-20">Dept:</span>
+                    <span>{member.department}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-slate-600">
+                    <span className="font-medium w-20">Joined:</span>
+                    <span>{formatDate(member.joiningDate)}</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-slate-50 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-amber-600">{member.packagesCreated || 0}</div>
+                    <div className="text-xs text-slate-600">Packages</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-blue-600">{member.clientsManaged || 0}</div>
+                    <div className="text-xs text-slate-600">Clients</div>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(member)}
+                    className="flex-1"
+                  >
+                    <Edit className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openPasswordDialog(member)}
+                    className="flex-1"
+                  >
+                    <Key className="h-3 w-3 mr-1" />
+                    Password
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDelete(member.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredMembers.length === 0 && (
+          <Card className="border-0 shadow-lg">
             <CardContent className="p-12 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
-              <p className="text-slate-600">Loading team members...</p>
-            </CardContent>
-          </Card>
-        ) : filteredMembers.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Users className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">No team members found</h3>
-              <p className="text-slate-600 mb-6">
-                {searchTerm || roleFilter !== 'all'
-                  ? 'Try adjusting your search or filters'
-                  : 'Add your first team member to get started'
+              <Users className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">No team members found</h3>
+              <p className="text-slate-600 mb-4">
+                {searchTerm || roleFilter !== 'all' 
+                  ? 'Try adjusting your search or filters' 
+                  : 'Get started by adding your first team member'
                 }
               </p>
               {!searchTerm && roleFilter === 'all' && (
-                <Button onClick={() => setIsDialogOpen(true)} className="bg-amber-600 hover:bg-amber-700">
+                <Button 
+                  onClick={() => setIsDialogOpen(true)}
+                  className="bg-amber-600 hover:bg-amber-700"
+                >
                   <UserPlus className="h-4 w-4 mr-2" />
-                  Add First Team Member
+                  Add Team Member
                 </Button>
               )}
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredMembers.map((member) => (
-              <Card key={member.id} className="hover:shadow-xl transition-all duration-300 border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={member.avatar} alt={member.fullName} />
-                        <AvatarFallback className="bg-amber-100 text-amber-700 font-semibold">
-                          {member.fullName.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h4 className="font-semibold text-slate-800">{member.fullName}</h4>
-                        <p className="text-sm text-slate-600">@{member.username}</p>
-                        <p className="text-sm text-slate-600">{member.department}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={`${getRoleColor(member.role)} flex items-center space-x-1`}>
-                        {getRoleIcon(member.role)}
-                        <span className="capitalize">{member.role}</span>
-                      </Badge>
-                      {member.isActive ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-500" />
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Email:</span>
-                      <span className="font-medium">{member.email}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Phone:</span>
-                      <span className="font-medium">{member.phone}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Joined:</span>
-                      <span className="font-medium">{formatDate(member.joiningDate)}</span>
-                    </div>
-                    {member.lastLogin && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-600">Last Login:</span>
-                        <span className="font-medium">{formatDate(member.lastLogin)}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4 p-3 bg-slate-50 rounded-lg">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-amber-600">{member.packagesCreated}</div>
-                      <div className="text-xs text-slate-600">Packages Created</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-blue-600">{member.clientsManaged}</div>
-                      <div className="text-xs text-slate-600">Clients Managed</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleEdit(member)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className={`${member.isActive ? 'text-red-600 border-red-200 hover:bg-red-50' : 'text-green-600 border-green-200 hover:bg-green-50'}`}
-                        onClick={() => toggleMemberStatus(member.id)}
-                      >
-                        {member.isActive ? 'Deactivate' : 'Activate'}
-                      </Button>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="text-red-600 border-red-200 hover:bg-red-50"
-                      onClick={() => handleDelete(member.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         )}
       </div>
     </div>
