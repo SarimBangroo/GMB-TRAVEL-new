@@ -76,6 +76,22 @@ async def create_indexes():
         # Create unique index for admin usernames
         await db.admins.create_index([("username", 1)], unique=True)
         
+        # Create indexes for team members
+        await db.team_members.create_index([("username", 1)], unique=True)
+        await db.team_members.create_index([("email", 1)], unique=True)
+        await db.team_members.create_index([("role", 1)])
+        await db.team_members.create_index([("isActive", 1)])
+        await db.team_members.create_index([("createdAt", -1)])
+        
+        # Create indexes for popups
+        await db.popups.create_index([("isActive", 1)])
+        await db.popups.create_index([("startDate", 1)])
+        await db.popups.create_index([("endDate", 1)])
+        await db.popups.create_index([("createdAt", -1)])
+        
+        # Create indexes for site settings
+        await db.site_settings.create_index([("isActive", 1)])
+        
         logger.info("Database indexes created successfully")
         
     except Exception as e:
@@ -86,7 +102,7 @@ def get_collection(collection_name: str):
     """Get a specific collection from database."""
     return Database.db[collection_name]
 
-# Initialize default admin if not exists
+# Initialize default admin and team members if not exist
 async def create_default_admin():
     """Create default admin user if not exists."""
     from auth import AuthManager
@@ -110,5 +126,59 @@ async def create_default_admin():
             await admin_collection.insert_one(default_admin.dict(by_alias=True))
             logger.info("Default admin user created successfully")
         
+        # Create default team members
+        team_collection = db.team_members
+        
+        existing_team_members = await team_collection.count_documents({})
+        
+        if existing_team_members == 0:
+            from models import TeamMember, UserRole
+            from datetime import datetime
+            
+            default_team_members = [
+                TeamMember(
+                    fullName="Rajesh Kumar",
+                    email="rajesh.manager@gmbtravelskashmir.com", 
+                    phone="+91 87654 32109",
+                    username="rajesh_manager",
+                    passwordHash=AuthManager.get_password_hash("manager123"),
+                    role=UserRole.manager,
+                    department="Operations",
+                    joiningDate=datetime(2024, 2, 15),
+                    packagesCreated=12,
+                    clientsManaged=38
+                ),
+                TeamMember(
+                    fullName="Priya Sharma",
+                    email="priya.agent@gmbtravelskashmir.com",
+                    phone="+91 76543 21098", 
+                    username="priya_agent",
+                    passwordHash=AuthManager.get_password_hash("agent123"),
+                    role=UserRole.agent,
+                    department="Sales",
+                    joiningDate=datetime(2024, 3, 10),
+                    packagesCreated=8,
+                    clientsManaged=28
+                ),
+                TeamMember(
+                    fullName="Amit Patel",
+                    email="amit.agent@gmbtravelskashmir.com",
+                    phone="+91 65432 10987",
+                    username="amit_agent", 
+                    passwordHash=AuthManager.get_password_hash("agent123"),
+                    role=UserRole.agent,
+                    department="Customer Support",
+                    joiningDate=datetime(2024, 4, 5),
+                    packagesCreated=5,
+                    clientsManaged=15,
+                    isActive=False
+                )
+            ]
+            
+            for team_member in default_team_members:
+                await team_collection.insert_one(team_member.dict(by_alias=True))
+            
+            logger.info("Default team members created successfully")
+        
     except Exception as e:
-        logger.error(f"Failed to create default admin: {e}")
+        logger.error(f"Failed to create default admin and team members: {e}")
