@@ -136,12 +136,12 @@ const AdminImages = () => {
       toast.success(`${selectedFiles.length} image(s) uploaded successfully!`);
       
       // Reset form
-      setSelectedFiles([]);
       setUploadForm({
         title: '',
         description: '',
         category: 'gallery',
-        tags: ''
+        tags: '',
+        imageUrl: ''
       });
       setIsUploadDialogOpen(false);
       
