@@ -4,12 +4,16 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 import os
+from dotenv import load_dotenv
 import logging
 from pathlib import Path
 from typing import List, Optional
 import shutil
 import uuid
 from datetime import datetime
+
+# Load environment variables
+load_dotenv()
 
 # Import models and database
 from models import *
