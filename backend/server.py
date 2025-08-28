@@ -539,5 +539,100 @@ async def generate_sample_pdf(current_admin: dict = Depends(admin_required)):
         logger.error(f"Generate sample PDF error: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate sample PDF")
 
+# Site Settings endpoints
+@api_router.get("/site-settings", response_model=SiteSettings)
+async def get_site_settings():
+    """Get site settings (public)."""
+    try:
+        db = get_database()
+        settings_collection = db.site_settings
+        
+        settings = await settings_collection.find_one({"isActive": True})
+        
+        if not settings:
+            # Create default settings if none exist
+            default_settings = SiteSettings()
+            await settings_collection.insert_one(default_settings.dict(by_alias=True))
+            return default_settings
+        
+        return SiteSettings(**settings)
+        
+    except Exception as e:
+        logger.error(f"Get site settings error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch site settings")
+
+@api_router.get("/admin/site-settings", response_model=SiteSettings)
+async def admin_get_site_settings(current_admin: dict = Depends(admin_required)):
+    """Get site settings (admin)."""
+    try:
+        db = get_database()
+        settings_collection = db.site_settings
+        
+        settings = await settings_collection.find_one({"isActive": True})
+        
+        if not settings:
+            # Create default settings if none exist
+            default_settings = SiteSettings()
+            await settings_collection.insert_one(default_settings.dict(by_alias=True))
+            return default_settings
+        
+        return SiteSettings(**settings)
+        
+    except Exception as e:
+        logger.error(f"Admin get site settings error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch site settings")
+
+@api_router.put("/admin/site-settings", response_model=SiteSettings)
+async def update_site_settings(settings_data: SiteSettingsUpdate, current_admin: dict = Depends(admin_required)):
+    """Update site settings (admin)."""
+    try:
+        db = get_database()
+        settings_collection = db.site_settings
+        
+        # Find existing settings
+        existing_settings = await settings_collection.find_one({"isActive": True})
+        
+        if not existing_settings:
+            # Create new settings if none exist
+            new_settings = SiteSettings(**settings_data.dict(exclude_unset=True))
+            await settings_collection.insert_one(new_settings.dict(by_alias=True))
+            return new_settings
+        else:
+            # Update existing settings
+            update_data = settings_data.dict(exclude_unset=True)
+            
+            await settings_collection.update_one(
+                {"_id": existing_settings["_id"]},
+                {"$set": update_data}
+            )
+            
+            # Return updated settings
+            updated_settings = await settings_collection.find_one({"_id": existing_settings["_id"]})
+            return SiteSettings(**updated_settings)
+        
+    except Exception as e:
+        logger.error(f"Update site settings error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update site settings")
+
+@api_router.post("/admin/site-settings/reset")
+async def reset_site_settings(current_admin: dict = Depends(admin_required)):
+    """Reset site settings to defaults (admin)."""
+    try:
+        db = get_database()
+        settings_collection = db.site_settings
+        
+        # Delete existing settings
+        await settings_collection.delete_many({"isActive": True})
+        
+        # Create new default settings
+        default_settings = SiteSettings()
+        await settings_collection.insert_one(default_settings.dict(by_alias=True))
+        
+        return {"message": "Site settings reset to defaults", "settings": default_settings}
+        
+    except Exception as e:
+        logger.error(f"Reset site settings error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reset site settings")
+
 # Include router in app
 app.include_router(api_router)
