@@ -427,5 +427,117 @@ async def get_dashboard_stats(current_admin: dict = Depends(admin_required)):
         logger.error(f"Get dashboard stats error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch dashboard stats")
 
+# PDF Generation endpoints
+@api_router.post("/admin/packages/{package_id}/generate-pdf")
+async def generate_package_pdf(
+    package_id: str, 
+    client_name: Optional[str] = Query(None),
+    client_email: Optional[str] = Query(None),
+    client_phone: Optional[str] = Query(None),
+    travel_date: Optional[str] = Query(None),
+    travelers: Optional[int] = Query(None),
+    current_admin: dict = Depends(admin_required)
+):
+    """Generate PDF for a specific package (admin)."""
+    try:
+        db = get_database()
+        packages_collection = db.packages
+        
+        # Get package data
+        package = await packages_collection.find_one({"_id": package_id})
+        if not package:
+            raise HTTPException(status_code=404, detail="Package not found")
+        
+        # Prepare client info if provided
+        client_info = None
+        if client_name:
+            client_info = {
+                'name': client_name,
+                'email': client_email or '',
+                'phone': client_phone or '',
+                'travel_date': travel_date or 'To be confirmed',
+                'travelers': travelers or 1
+            }
+        
+        # Generate PDF
+        pdf_result = pdf_generator.create_package_pdf(package, client_info)
+        
+        return {
+            "success": True,
+            "message": "PDF generated successfully",
+            "pdf": pdf_result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Generate PDF error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate PDF")
+
+@api_router.get("/admin/packages/{package_id}/download-pdf")
+async def download_package_pdf(
+    package_id: str,
+    client_name: Optional[str] = Query(None),
+    client_email: Optional[str] = Query(None),
+    client_phone: Optional[str] = Query(None),
+    travel_date: Optional[str] = Query(None),
+    travelers: Optional[int] = Query(None),
+    current_admin: dict = Depends(admin_required)
+):
+    """Download PDF for a specific package (admin)."""
+    try:
+        db = get_database()
+        packages_collection = db.packages
+        
+        # Get package data
+        package = await packages_collection.find_one({"_id": package_id})
+        if not package:
+            raise HTTPException(status_code=404, detail="Package not found")
+        
+        # Prepare client info if provided
+        client_info = None
+        if client_name:
+            client_info = {
+                'name': client_name,
+                'email': client_email or '',
+                'phone': client_phone or '',
+                'travel_date': travel_date or 'To be confirmed',
+                'travelers': travelers or 1
+            }
+        
+        # Generate PDF
+        pdf_result = pdf_generator.create_package_pdf(package, client_info)
+        
+        # Return file for download
+        return FileResponse(
+            path=pdf_result['filepath'],
+            filename=pdf_result['filename'],
+            media_type='application/pdf'
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Download PDF error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to download PDF")
+
+@api_router.get("/admin/generate-sample-pdf")
+async def generate_sample_pdf(current_admin: dict = Depends(admin_required)):
+    """Generate a sample PDF to test the system (admin)."""
+    try:
+        from pdf_generator import generate_sample_pdf
+        
+        pdf_result = generate_sample_pdf()
+        
+        return {
+            "success": True,
+            "message": "Sample PDF generated successfully",
+            "pdf": pdf_result
+        }
+        
+    except Exception as e:
+        logger.error(f"Generate sample PDF error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate sample PDF")
+
 # Include router in app
 app.include_router(api_router)
