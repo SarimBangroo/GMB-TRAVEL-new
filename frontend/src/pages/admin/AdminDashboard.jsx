@@ -186,7 +186,7 @@ const AdminDashboard = () => {
                 <CardDescription>Manage your travel business efficiently</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {quickActions.map((action, index) => (
                     <Link key={index} to={action.link}>
                       <Card className={`${action.color} text-white hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0`}>
