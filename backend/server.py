@@ -18,7 +18,7 @@ load_dotenv()
 # Import models and database
 from models import *
 from database import connect_to_mongo, close_mongo_connection, get_database, create_default_admin
-from auth import AuthManager, admin_required
+from auth import AuthManager, admin_required, team_member_required
 from pdf_generator import PackagePDFGenerator
 
 # Configure logging
