@@ -203,12 +203,14 @@ class APITester:
             return False
             
         try:
-            # Create test team member data
+            # Create test team member data with unique username
+            import uuid
+            unique_suffix = str(uuid.uuid4())[:8]
             team_data = {
                 "fullName": "Test Employee",
-                "email": "test.employee@gmbtravelskashmir.com",
+                "email": f"test.employee.{unique_suffix}@gmbtravelskashmir.com",
                 "phone": "+91 98765 43299",
-                "username": "test_employee",
+                "username": f"test_employee_{unique_suffix}",
                 "password": "testpass123",
                 "role": "agent",
                 "department": "Sales",
