@@ -1,6 +1,7 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Form, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
 import os
 import logging
@@ -14,6 +15,7 @@ from datetime import datetime
 from models import *
 from database import connect_to_mongo, close_mongo_connection, get_database, create_default_admin
 from auth import AuthManager, admin_required
+from pdf_generator import PackagePDFGenerator
 
 # Configure logging
 logging.basicConfig(
