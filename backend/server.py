@@ -56,6 +56,9 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 # Mount static files for uploads
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+# Initialize PDF generator
+pdf_generator = PackagePDFGenerator()
+
 # Root endpoint
 @api_router.get("/")
 async def root():
