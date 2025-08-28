@@ -17,6 +17,7 @@ import AdminTestimonials from './pages/admin/AdminTestimonials';
 import AdminImages from './pages/admin/AdminImages';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminTeam from './pages/admin/AdminTeam';
+import AdminSiteSettings from './pages/admin/AdminSiteSettings';
 
 function App() {
   return (
