@@ -69,8 +69,8 @@ const Blog = () => {
     }
   });
 
-  const featuredPosts = posts.filter(post => post.featured && post.status === 'published');
-  const categories = ['All', 'Travel Tips', 'Accommodation', 'Adventure', 'Photography', 'Culture', 'Food'];
+  const featuredPosts = posts.filter(post => post.views > 1000); // Use view count as featured criteria
+  const categories = ['All', 'destinations', 'travel_tips', 'culture', 'adventure', 'photography', 'seasonal', 'news'];
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
