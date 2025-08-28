@@ -76,6 +76,7 @@ function App() {
           <Route path="/admin/images" element={<AdminImages />} />
           <Route path="/admin/bookings" element={<AdminBookings />} />
           <Route path="/admin/team" element={<AdminTeam />} />
+          <Route path="/admin/site-settings" element={<AdminSiteSettings />} />
         </Routes>
         <Toaster />
       </BrowserRouter>
