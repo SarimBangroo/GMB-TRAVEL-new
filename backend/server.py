@@ -1501,11 +1501,11 @@ async def create_vehicle(
 async def update_vehicle(
     vehicle_id: str,
     vehicle_data: VehicleUpdate,
-    current_admin: dict = Depends(admin_required),
-    db=Depends(get_database)
+    current_admin: dict = Depends(admin_required)
 ):
     """Update a vehicle (admin)."""
     try:
+        db = get_database()
         update_data = {k: v for k, v in vehicle_data.dict().items() if v is not None}
         update_data["updatedAt"] = datetime.utcnow()
         
