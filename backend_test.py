@@ -392,8 +392,8 @@ class APITester:
             if response.status_code == 200:
                 data = response.json()
                 
-                if "id" in data and data.get("title") == "Special Kashmir Tour Offer":
-                    self.created_popup_id = data["id"]
+                if ("id" in data or "_id" in data) and data.get("title") == "Special Kashmir Tour Offer":
+                    self.created_popup_id = data.get("id") or data.get("_id")
                     self.log_test("Admin Create Popup", True, f"Successfully created popup with ID: {self.created_popup_id}")
                     return True
                 else:
