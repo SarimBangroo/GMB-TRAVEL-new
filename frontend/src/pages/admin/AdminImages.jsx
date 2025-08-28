@@ -36,6 +36,8 @@ const AdminImages = () => {
     imageUrl: ''
   });
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
