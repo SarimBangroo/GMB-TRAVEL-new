@@ -563,13 +563,31 @@ const AdminPackages = () => {
                     <Badge variant="outline" className="text-xs">
                       {pkg.category}
                     </Badge>
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1">
                       <Link to={`/packages/${pkg.id}`} target="_blank">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" title="Preview Package">
                           <Eye className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Button variant="outline" size="sm" onClick={() => handleEdit(pkg)}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleDownloadPDF(pkg)}
+                        title="Download PDF"
+                        className="text-green-600 border-green-200 hover:bg-green-50"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleSendPDF(pkg)}
+                        title="Send PDF via Email"
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(pkg)} title="Edit Package">
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button 
@@ -577,6 +595,7 @@ const AdminPackages = () => {
                         size="sm" 
                         onClick={() => handleDelete(pkg.id)}
                         className="text-red-600 border-red-200 hover:bg-red-50"
+                        title="Delete Package"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
