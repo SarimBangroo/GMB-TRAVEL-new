@@ -102,6 +102,13 @@ const AdminDashboard = () => {
       icon: MessageSquare,
       link: '/admin/testimonials',
       color: 'bg-amber-600 hover:bg-amber-700'
+    },
+    {
+      title: 'Site Settings',
+      description: 'Manage website content and settings',
+      icon: Settings,
+      link: '/admin/site-settings',
+      color: 'bg-slate-600 hover:bg-slate-700'
     }
   ];
 
