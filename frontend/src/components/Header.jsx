@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { siteSettings, loading } = useSiteSettings();
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -17,19 +19,24 @@ const Header = () => {
 
   const isActive = (href) => location.pathname === href;
 
+  // Show loading state or fallback values
+  const companyName = siteSettings?.companyInfo?.name || 'G.M.B Travels Kashmir';
+  const tagline = siteSettings?.companyInfo?.tagline || 'Discover Paradise on Earth';
+  const logo = siteSettings?.companyInfo?.logo || 'https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/u7oxyvzc_logo.jpg';
+
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-3">
             <img 
-              src="https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/u7oxyvzc_logo.jpg" 
-              alt="G.M.B Travels Kashmir" 
+              src={logo} 
+              alt={companyName} 
               className="h-12 w-12 rounded-full object-cover"
             />
             <div>
-              <h1 className="text-xl font-bold text-slate-800">G.M.B Travels Kashmir</h1>
-              <p className="text-sm text-slate-600">Discover Paradise on Earth</p>
+              <h1 className="text-xl font-bold text-slate-800">{companyName}</h1>
+              <p className="text-sm text-slate-600">{tagline}</p>
             </div>
           </Link>
 
