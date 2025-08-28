@@ -23,18 +23,17 @@ import { toast } from 'sonner';
 
 const AdminImages = () => {
   const navigate = useNavigate();
-  const fileInputRef = useRef(null);
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadForm, setUploadForm] = useState({
     title: '',
     description: '',
     category: 'gallery',
-    tags: ''
+    tags: '',
+    imageUrl: ''
   });
   const [selectedImage, setSelectedImage] = useState(null);
 
