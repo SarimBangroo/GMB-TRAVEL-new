@@ -1420,3 +1420,330 @@ async def test_ai_connection(current_admin: dict = Depends(admin_required)):
 
 # Include router in app
 app.include_router(api_router)
+
+# ============================================================================
+# VEHICLE MANAGEMENT ENDPOINTS
+# ============================================================================
+
+@api_router.get("/vehicles", tags=["vehicles"])
+async def get_vehicles(
+    active_only: bool = Query(True, description="Return only active vehicles"),
+    db=Depends(get_database)
+):
+    """Get all vehicles (public endpoint)."""
+    try:
+        filter_criteria = {}
+        if active_only:
+            filter_criteria["isActive"] = True
+        
+        vehicles_cursor = db.vehicles.find(filter_criteria)
+        vehicles = await vehicles_cursor.sort("sortOrder", 1).to_list(length=100)
+        
+        # Convert ObjectId to string for each vehicle
+        for vehicle in vehicles:
+            vehicle["_id"] = str(vehicle["_id"])
+        
+        return {"status": "success", "data": vehicles}
+        
+    except Exception as e:
+        logger.error(f"Get vehicles error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/vehicles", tags=["admin-vehicles"])
+async def get_admin_vehicles(
+    current_admin: dict = Depends(admin_required),
+    db=Depends(get_database)
+):
+    """Get all vehicles for admin management."""
+    try:
+        vehicles_cursor = db.vehicles.find({})
+        vehicles = await vehicles_cursor.sort("sortOrder", 1).to_list(length=100)
+        
+        # Convert ObjectId to string for each vehicle
+        for vehicle in vehicles:
+            vehicle["_id"] = str(vehicle["_id"])
+        
+        return {"status": "success", "data": vehicles}
+        
+    except Exception as e:
+        logger.error(f"Get admin vehicles error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/vehicles", tags=["admin-vehicles"])
+async def create_vehicle(
+    vehicle_data: VehicleCreate,
+    current_admin: dict = Depends(admin_required),
+    db=Depends(get_database)
+):
+    """Create a new vehicle (admin)."""
+    try:
+        vehicle_dict = vehicle_data.dict()
+        vehicle_dict["createdAt"] = datetime.utcnow()
+        vehicle_dict["updatedAt"] = datetime.utcnow()
+        
+        result = await db.vehicles.insert_one(vehicle_dict)
+        
+        # Get the created vehicle
+        created_vehicle = await db.vehicles.find_one({"_id": result.inserted_id})
+        created_vehicle["_id"] = str(created_vehicle["_id"])
+        
+        return {
+            "status": "success",
+            "message": "Vehicle created successfully",
+            "data": created_vehicle
+        }
+        
+    except Exception as e:
+        logger.error(f"Create vehicle error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/admin/vehicles/{vehicle_id}", tags=["admin-vehicles"])
+async def update_vehicle(
+    vehicle_id: str,
+    vehicle_data: VehicleUpdate,
+    current_admin: dict = Depends(admin_required),
+    db=Depends(get_database)
+):
+    """Update a vehicle (admin)."""
+    try:
+        update_data = {k: v for k, v in vehicle_data.dict().items() if v is not None}
+        update_data["updatedAt"] = datetime.utcnow()
+        
+        result = await db.vehicles.update_one(
+            {"_id": vehicle_id},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        
+        # Get the updated vehicle
+        updated_vehicle = await db.vehicles.find_one({"_id": vehicle_id})
+        updated_vehicle["_id"] = str(updated_vehicle["_id"])
+        
+        return {
+            "status": "success",
+            "message": "Vehicle updated successfully",
+            "data": updated_vehicle
+        }
+        
+    except Exception as e:
+        logger.error(f"Update vehicle error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/admin/vehicles/{vehicle_id}", tags=["admin-vehicles"])
+async def delete_vehicle(
+    vehicle_id: str,
+    current_admin: dict = Depends(admin_required),
+    db=Depends(get_database)
+):
+    """Delete a vehicle (admin)."""
+    try:
+        result = await db.vehicles.delete_one({"_id": vehicle_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        
+        return {
+            "status": "success",
+            "message": "Vehicle deleted successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Delete vehicle error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================================
+# WHATSAPP CRM INTEGRATION ENDPOINTS
+# ============================================================================
+
+@api_router.get("/admin/whatsapp/config", tags=["whatsapp-crm"])
+async def get_whatsapp_config(
+    current_admin: dict = Depends(admin_required),
+    db=Depends(get_database)
+):
+    """Get WhatsApp configuration (admin)."""
+    try:
+        config = await db.whatsapp_config.find_one({})
+        
+        if not config:
+            # Create default config
+            default_config = WhatsAppConfig().dict()
+            result = await db.whatsapp_config.insert_one(default_config)
+            config = await db.whatsapp_config.find_one({"_id": result.inserted_id})
+        
+        config["_id"] = str(config["_id"])
+        # Don't expose sensitive data
+        if "apiToken" in config:
+            config["apiToken"] = "***hidden***" if config["apiToken"] else None
+        
+        return {"status": "success", "data": config}
+        
+    except Exception as e:
+        logger.error(f"Get WhatsApp config error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/admin/whatsapp/config", tags=["whatsapp-crm"])
+async def update_whatsapp_config(
+    config_data: dict,
+    current_admin: dict = Depends(admin_required),
+    db=Depends(get_database)
+):
+    """Update WhatsApp configuration (admin)."""
+    try:
+        config_data["updatedAt"] = datetime.utcnow()
+        
+        # Update or create config
+        result = await db.whatsapp_config.update_one(
+            {},
+            {"$set": config_data},
+            upsert=True
+        )
+        
+        return {
+            "status": "success",
+            "message": "WhatsApp configuration updated successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Update WhatsApp config error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/whatsapp/templates", tags=["whatsapp-crm"])
+async def get_whatsapp_templates(
+    current_admin: dict = Depends(admin_required),
+    db=Depends(get_database)
+):
+    """Get all WhatsApp message templates (admin)."""
+    try:
+        templates_cursor = db.whatsapp_templates.find({"isActive": True})
+        templates = await templates_cursor.to_list(length=100)
+        
+        # Convert ObjectId to string
+        for template in templates:
+            template["_id"] = str(template["_id"])
+        
+        return {"status": "success", "data": templates}
+        
+    except Exception as e:
+        logger.error(f"Get WhatsApp templates error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/whatsapp/templates", tags=["whatsapp-crm"])
+async def create_whatsapp_template(
+    template_data: WhatsAppTemplate,
+    current_admin: dict = Depends(admin_required),
+    db=Depends(get_database)
+):
+    """Create a new WhatsApp message template (admin)."""
+    try:
+        template_dict = template_data.dict()
+        template_dict["createdAt"] = datetime.utcnow()
+        template_dict["updatedAt"] = datetime.utcnow()
+        
+        result = await db.whatsapp_templates.insert_one(template_dict)
+        
+        # Get the created template
+        created_template = await db.whatsapp_templates.find_one({"_id": result.inserted_id})
+        created_template["_id"] = str(created_template["_id"])
+        
+        return {
+            "status": "success",
+            "message": "WhatsApp template created successfully",
+            "data": created_template
+        }
+        
+    except Exception as e:
+        logger.error(f"Create WhatsApp template error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/admin/whatsapp/send", tags=["whatsapp-crm"])
+async def send_whatsapp_message(
+    message_data: dict,
+    current_admin: dict = Depends(admin_required),
+    db=Depends(get_database)
+):
+    """Send WhatsApp message to client (admin)."""
+    try:
+        client_id = message_data.get("clientId")
+        phone_number = message_data.get("phoneNumber")
+        message = message_data.get("message")
+        template_name = message_data.get("templateName")
+        
+        if not phone_number or not message:
+            raise HTTPException(status_code=400, detail="Phone number and message are required")
+        
+        # Get WhatsApp config
+        config = await db.whatsapp_config.find_one({})
+        if not config or not config.get("isEnabled"):
+            raise HTTPException(status_code=400, detail="WhatsApp integration is not enabled")
+        
+        # Create message record
+        whatsapp_message = WhatsAppMessage(
+            clientId=client_id,
+            phoneNumber=phone_number,
+            message=message,
+            direction="outbound",
+            templateName=template_name,
+            sentAt=datetime.utcnow()
+        )
+        
+        message_dict = whatsapp_message.dict()
+        result = await db.whatsapp_messages.insert_one(message_dict)
+        
+        # TODO: Integrate with actual WhatsApp API here
+        # For now, we'll just log the message
+        logger.info(f"WhatsApp message to {phone_number}: {message}")
+        
+        # Update client communication history if clientId provided
+        if client_id:
+            communication = Communication(
+                type=CommunicationType.whatsapp,
+                direction="outbound",
+                message=message,
+                completedAt=datetime.utcnow()
+            )
+            
+            await db.clients.update_one(
+                {"_id": client_id},
+                {
+                    "$push": {"communicationHistory": communication.dict()},
+                    "$set": {"lastContact": datetime.utcnow()}
+                }
+            )
+        
+        return {
+            "status": "success",
+            "message": "WhatsApp message sent successfully",
+            "messageId": str(result.inserted_id)
+        }
+        
+    except Exception as e:
+        logger.error(f"Send WhatsApp message error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/whatsapp/messages", tags=["whatsapp-crm"])
+async def get_whatsapp_messages(
+    client_id: Optional[str] = Query(None, description="Filter by client ID"),
+    limit: int = Query(50, description="Number of messages to return"),
+    current_admin: dict = Depends(admin_required),
+    db=Depends(get_database)
+):
+    """Get WhatsApp messages (admin)."""
+    try:
+        filter_criteria = {}
+        if client_id:
+            filter_criteria["clientId"] = client_id
+        
+        messages_cursor = db.whatsapp_messages.find(filter_criteria)
+        messages = await messages_cursor.sort("createdAt", -1).to_list(length=limit)
+        
+        # Convert ObjectId to string
+        for message in messages:
+            message["_id"] = str(message["_id"])
+        
+        return {"status": "success", "data": messages}
+        
+    except Exception as e:
+        logger.error(f"Get WhatsApp messages error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
