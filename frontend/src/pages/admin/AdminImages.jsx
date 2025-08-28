@@ -17,7 +17,8 @@ import {
   Plus,
   Image as ImageIcon,
   Download,
-  Eye
+  Eye,
+  Upload
 } from 'lucide-react';
 import { toast } from 'sonner';
 
