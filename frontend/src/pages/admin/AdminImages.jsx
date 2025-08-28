@@ -245,41 +245,13 @@ const AdminImages = () => {
                 
                 <form onSubmit={handleUpload} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Select Images *</label>
-                    <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-amber-400 transition-colors">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        id="file-upload"
-                      />
-                      <label htmlFor="file-upload" className="cursor-pointer">
-                        <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                        <p className="text-slate-600 mb-2">Click to upload images or drag and drop</p>
-                        <p className="text-sm text-slate-500">PNG, JPG, WebP up to 10MB each</p>
-                      </label>
-                    </div>
-                    {selectedFiles.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-slate-700 mb-2">
-                          Selected Files ({selectedFiles.length}):
-                        </p>
-                        <div className="space-y-2 max-h-32 overflow-y-auto">
-                          {selectedFiles.map((file, index) => (
-                            <div key={index} className="flex items-center space-x-2 p-2 bg-slate-50 rounded">
-                              <ImageIcon className="h-4 w-4 text-slate-600" />
-                              <span className="text-sm text-slate-700 flex-1">{file.name}</span>
-                              <span className="text-xs text-slate-500">
-                                {(file.size / 1024 / 1024).toFixed(1)} MB
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <label className="block text-sm font-medium text-slate-700 mb-2">Upload Image *</label>
+                    <ImageUpload
+                      value={uploadForm.imageUrl}
+                      onChange={(url) => setUploadForm(prev => ({ ...prev, imageUrl: url }))}
+                      category="gallery"
+                      placeholder="Upload gallery image"
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
