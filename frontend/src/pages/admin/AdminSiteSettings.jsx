@@ -594,7 +594,7 @@ const AdminSiteSettings = () => {
                   rows={3}
                 />
                 <p className="text-sm text-slate-600 mt-2">
-                  Get this from Google Maps > Share > Embed a map > Copy HTML > Extract src URL
+                  Get this from Google Maps → Share → Embed a map → Copy HTML → Extract src URL
                 </p>
               </div>
 
