@@ -14,7 +14,8 @@ import {
   LogOut,
   Eye,
   Plus,
-  Edit
+  Edit,
+  BookOpen
 } from 'lucide-react';
 
 const AdminDashboard = () => {
