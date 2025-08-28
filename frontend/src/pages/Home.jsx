@@ -11,8 +11,34 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { mockData } from '../mock';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const Home = () => {
+  const { siteSettings } = useSiteSettings();
+
+  // Get dynamic content or fallback to defaults
+  const heroSection = siteSettings?.heroSection || {
+    title: "Experience the Beauty of",
+    subtitle: "Kashmir",
+    description: "Discover the pristine valleys, serene lakes, and majestic mountains of Kashmir with our expertly crafted tour packages",
+    backgroundImage: "https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/u2wmxitn_pexels-abhilash-mishra-1539700.jpg",
+    ctaButtonText: "Explore Packages",
+    secondaryCtaText: "Contact Us"
+  };
+
+  const companyInfo = siteSettings?.companyInfo || {
+    name: "G.M.B Travels Kashmir",
+    aboutText: "With years of experience in Kashmir tourism, G.M.B Travels Kashmir has been the trusted companion for travelers seeking authentic experiences in the paradise on earth.",
+    missionStatement: "We specialize in creating unforgettable journeys through Kashmir's breathtaking landscapes, from the serene Dal Lake to the snow-capped peaks of Gulmarg. Our team of local experts ensures every detail of your trip is perfectly planned."
+  };
+
+  const businessStats = siteSettings?.businessStats || {
+    happyCustomers: 500,
+    tourPackages: 50,
+    yearsExperience: 10,
+    supportAvailability: "24/7"
+  };
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -20,18 +46,18 @@ const Home = () => {
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/u2wmxitn_pexels-abhilash-mishra-1539700.jpg')`
+            backgroundImage: `url('${heroSection.backgroundImage}')`
           }}
         >
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
         <div className="relative z-10 text-center text-white px-4 max-w-4xl">
           <h2 className="text-5xl md:text-7xl font-bold mb-6 drop-shadow-lg">
-            Experience the Beauty of 
-            <span className="text-amber-400 block mt-2">Kashmir</span>
+            {heroSection.title}
+            <span className="text-amber-400 block mt-2">{heroSection.subtitle}</span>
           </h2>
           <p className="text-xl md:text-2xl mb-8 drop-shadow text-slate-100 max-w-3xl mx-auto">
-            Discover the pristine valleys, serene lakes, and majestic mountains of Kashmir with our expertly crafted tour packages
+            {heroSection.description}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/packages">
@@ -39,7 +65,7 @@ const Home = () => {
                 size="lg" 
                 className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-3 text-lg font-semibold transition-all duration-300 transform hover:scale-105"
               >
-                Explore Packages
+                {heroSection.ctaButtonText}
               </Button>
             </Link>
             <Link to="/contact">
@@ -48,7 +74,7 @@ const Home = () => {
                 size="lg" 
                 className="border-white text-white hover:bg-white hover:text-slate-800 px-8 py-3 text-lg font-semibold transition-all duration-300"
               >
-                Contact Us
+                {heroSection.secondaryCtaText}
               </Button>
             </Link>
           </div>
@@ -169,13 +195,13 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h3 className="text-4xl font-bold text-slate-800 mb-6">About G.M.B Travels Kashmir</h3>
+              <h3 className="text-4xl font-bold text-slate-800 mb-6">About {companyInfo.name}</h3>
               <div className="space-y-6 text-slate-600 leading-relaxed">
                 <p className="text-lg">
-                  With years of experience in Kashmir tourism, G.M.B Travels Kashmir has been the trusted companion for travelers seeking authentic experiences in the paradise on earth.
+                  {companyInfo.aboutText}
                 </p>
                 <p>
-                  We specialize in creating unforgettable journeys through Kashmir's breathtaking landscapes, from the serene Dal Lake to the snow-capped peaks of Gulmarg. Our team of local experts ensures every detail of your trip is perfectly planned.
+                  {companyInfo.missionStatement}
                 </p>
                 <p>
                   Whether you're seeking adventure in the mountains, tranquility on a houseboat, or cultural immersion in local traditions, we craft personalized experiences that create lasting memories.
@@ -184,19 +210,19 @@ const Home = () => {
               
               <div className="mt-8 grid grid-cols-2 gap-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-amber-600 mb-2">500+</div>
+                  <div className="text-3xl font-bold text-amber-600 mb-2">{businessStats.happyCustomers}+</div>
                   <div className="text-slate-600">Happy Travelers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-amber-600 mb-2">50+</div>
+                  <div className="text-3xl font-bold text-amber-600 mb-2">{businessStats.tourPackages}+</div>
                   <div className="text-slate-600">Tour Packages</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-amber-600 mb-2">10+</div>
+                  <div className="text-3xl font-bold text-amber-600 mb-2">{businessStats.yearsExperience}+</div>
                   <div className="text-slate-600">Years Experience</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-amber-600 mb-2">24/7</div>
+                  <div className="text-3xl font-bold text-amber-600 mb-2">{businessStats.supportAvailability}</div>
                   <div className="text-slate-600">Support</div>
                 </div>
               </div>
@@ -250,7 +276,7 @@ const Home = () => {
                 </div>
               </div>
               <p className="text-slate-600 mb-6">
-                Read authentic reviews from travelers who have experienced the beauty of Kashmir with G.M.B Travels. Their stories inspire our commitment to excellence.
+                Read authentic reviews from travelers who have experienced the beauty of Kashmir with {companyInfo.name}. Their stories inspire our commitment to excellence.
               </p>
               <Link to="/testimonials">
                 <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white">
