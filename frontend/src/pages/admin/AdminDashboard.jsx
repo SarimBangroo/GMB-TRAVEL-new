@@ -116,6 +116,13 @@ const AdminDashboard = () => {
       icon: MessageSquare,
       link: '/admin/popups',
       color: 'bg-pink-600 hover:bg-pink-700'
+    },
+    {
+      title: 'Blog Management',
+      description: 'Create and manage blog posts with AI',
+      icon: BookOpen,
+      link: '/admin/blog',
+      color: 'bg-indigo-600 hover:bg-indigo-700'
     }
   ];
 
