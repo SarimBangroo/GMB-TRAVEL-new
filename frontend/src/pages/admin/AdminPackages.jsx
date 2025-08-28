@@ -18,7 +18,11 @@ import {
   Calendar,
   DollarSign,
   Search,
-  Filter
+  Filter,
+  Download,
+  FileText,
+  Mail,
+  MessageSquare
 } from 'lucide-react';
 import { toast } from 'sonner';
 
