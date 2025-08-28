@@ -727,18 +727,6 @@ const BookCab = () => {
           </div>
         </div>
       </div>
-
-      {/* CSS for 3D Effects */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: perspective(1000px) rotateX(5deg) rotateY(5deg) translateY(0px); }
-          50% { transform: perspective(1000px) rotateX(5deg) rotateY(5deg) translateY(-10px); }
-        }
-        
-        .shadow-3xl {
-          box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
-        }
-      `}</style>
     </div>
   );
 };
