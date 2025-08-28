@@ -16,6 +16,7 @@ import AdminPackages from './pages/admin/AdminPackages';
 import AdminTestimonials from './pages/admin/AdminTestimonials';
 import AdminImages from './pages/admin/AdminImages';
 import AdminBookings from './pages/admin/AdminBookings';
+import AdminTeam from './pages/admin/AdminTeam';
 
 function App() {
   return (
@@ -73,6 +74,7 @@ function App() {
           <Route path="/admin/testimonials" element={<AdminTestimonials />} />
           <Route path="/admin/images" element={<AdminImages />} />
           <Route path="/admin/bookings" element={<AdminBookings />} />
+          <Route path="/admin/team" element={<AdminTeam />} />
         </Routes>
         <Toaster />
       </BrowserRouter>
