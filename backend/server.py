@@ -1472,11 +1472,11 @@ async def get_admin_vehicles(
 @api_router.post("/admin/vehicles", tags=["admin-vehicles"])
 async def create_vehicle(
     vehicle_data: VehicleCreate,
-    current_admin: dict = Depends(admin_required),
-    db=Depends(get_database)
+    current_admin: dict = Depends(admin_required)
 ):
     """Create a new vehicle (admin)."""
     try:
+        db = get_database()
         vehicle_dict = vehicle_data.dict()
         vehicle_dict["createdAt"] = datetime.utcnow()
         vehicle_dict["updatedAt"] = datetime.utcnow()
