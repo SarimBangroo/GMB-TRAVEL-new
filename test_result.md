@@ -135,6 +135,51 @@ backend:
         -agent: "testing"
         -comment: "✅ Site Settings models are properly implemented with comprehensive data structures including ContactInfo, SocialMedia, CompanyInfo, HeroSection, MapSettings, SeoSettings, BusinessStats, and main SiteSettings model with proper validation and default values."
 
+  - task: "Team Management API endpoints"
+    implemented: true
+    working: true
+    file: "server.py, models.py, auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Created comprehensive Team Management API endpoints including team member login, admin team management (CRUD operations), and role-based authentication system"
+        -working: true
+        -agent: "testing"
+        -comment: "✅ ALL TEAM MANAGEMENT API ENDPOINTS WORKING PERFECTLY: Successfully tested POST /api/team/login with both rajesh_manager/manager123 and priya_agent/agent123 credentials - both authenticate correctly and return proper JWT tokens with role information. Admin team management endpoints fully functional: GET /api/admin/team (retrieved 4 team members), POST /api/admin/team (successfully created new team member), PUT /api/admin/team/{id} (updated team member details), DELETE /api/admin/team/{id} (deleted test team member), POST /api/admin/team/{id}/change-password (admin password change working). Role-based authentication properly implemented - team members correctly blocked from admin endpoints with 403 status. All endpoints require proper authentication and unauthorized access is blocked."
+
+  - task: "Popup Management API endpoints"
+    implemented: true
+    working: true
+    file: "server.py, models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Created comprehensive Popup Management API endpoints for managing website announcements and promotional popups"
+        -working: true
+        -agent: "testing"
+        -comment: "✅ ALL POPUP MANAGEMENT API ENDPOINTS WORKING PERFECTLY: Successfully tested GET /api/popups (public endpoint returning active popups), GET /api/admin/popups (admin endpoint returning all popups), POST /api/admin/popups (successfully created popup with offer type, custom styling, and scheduling), PUT /api/admin/popups/{id} (updated popup content and styling), DELETE /api/admin/popups/{id} (deleted test popup). Integration testing confirmed that admin-created popups immediately appear in public endpoint. All admin endpoints properly protected with authentication. Popup scheduling and filtering by active status working correctly."
+
+  - task: "Authentication and Authorization System"
+    implemented: true
+    working: true
+    file: "auth.py, server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "Enhanced authentication system with role-based access control for admin, manager, and agent roles"
+        -working: true
+        -agent: "testing"
+        -comment: "✅ AUTHENTICATION AND AUTHORIZATION SYSTEM FULLY FUNCTIONAL: Admin login working with proper JWT token generation including role information. Token verification endpoint working correctly. Role-based access control properly implemented - admin_required, manager_required, and team_member_required dependencies working as expected. Team member authentication working for both manager and agent roles. Unauthorized access properly blocked with 401/403 status codes. JWT tokens contain proper user information including username, user_id, and role. Fixed admin login to include role in JWT token for proper authorization."
+
 frontend:
   - task: "Admin Site Settings component"
     implemented: true
