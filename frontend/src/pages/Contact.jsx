@@ -15,8 +15,11 @@ import {
   Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 const Contact = () => {
+  const { siteSettings } = useSiteSettings();
+  
   const [contactForm, setContactForm] = useState({
     name: '',
     email: '',
@@ -48,29 +51,50 @@ const Contact = () => {
     });
   };
 
-  const contactInfo = [
+  // Get dynamic content or fallback to defaults
+  const contactInfo = siteSettings?.contactInfo || {
+    phone: ["+91 98765 43210", "+91 98765 43211"],
+    email: ["info@gmbtravelskashmir.com", "bookings@gmbtravelskashmir.com"],
+    address: ["Main Office: Srinagar, Kashmir, India", "Branch: Dal Lake Area"],
+    workingHours: ["Mon - Sat: 9:00 AM - 8:00 PM", "Sun: 10:00 AM - 6:00 PM"],
+    whatsapp: "+919876543210"
+  };
+
+  const businessStats = siteSettings?.businessStats || {
+    happyCustomers: 500,
+    yearsExperience: 10,
+    tourPackages: 50,
+    supportAvailability: "24/7"
+  };
+
+  const mapSettings = siteSettings?.mapSettings || {
+    address: "Srinagar, Kashmir, India",
+    embedUrl: ""
+  };
+
+  const contactInfoDisplay = [
     {
       icon: Phone,
       title: "Phone",
-      details: ["+91 98765 43210", "+91 98765 43211"],
+      details: contactInfo.phone || ["+91 98765 43210"],
       description: "Call us anytime for immediate assistance"
     },
     {
       icon: Mail,
       title: "Email",
-      details: ["info@gmbtravelskashmir.com", "bookings@gmbtravelskashmir.com"],
+      details: contactInfo.email || ["info@gmbtravelskashmir.com"],
       description: "Send us your queries and get quick responses"
     },
     {
       icon: MapPin,
       title: "Address",
-      details: ["Main Office: Srinagar, Kashmir, India", "Branch: Dal Lake Area"],
+      details: contactInfo.address || ["Srinagar, Kashmir, India"],
       description: "Visit our office for personalized consultation"
     },
     {
       icon: Clock,
       title: "Working Hours",
-      details: ["Mon - Sat: 9:00 AM - 8:00 PM", "Sun: 10:00 AM - 6:00 PM"],
+      details: contactInfo.workingHours || ["Mon - Sat: 9:00 AM - 8:00 PM"],
       description: "We're available during these hours"
     }
   ];
@@ -157,7 +181,7 @@ const Contact = () => {
                       <label className="block text-sm font-medium text-slate-700 mb-2">Phone Number *</label>
                       <Input
                         type="tel"
-                        placeholder="+91 98765 43210"
+                        placeholder={contactInfo.phone ? contactInfo.phone[0] : "+91 98765 43210"}
                         value={contactForm.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         required
@@ -239,7 +263,7 @@ const Contact = () => {
                 <CardDescription>Multiple ways to reach us</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {contactInfo.map((info, index) => (
+                {contactInfoDisplay.map((info, index) => (
                   <div key={index} className="flex items-start space-x-4">
                     <div className="p-3 bg-amber-100 rounded-full flex-shrink-0">
                       <info.icon className="h-5 w-5 text-amber-600" />
@@ -264,7 +288,7 @@ const Contact = () => {
               <CardContent className="space-y-3">
                 <Button 
                   className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => window.open('https://wa.me/919876543210', '_blank')}
+                  onClick={() => window.open(`https://wa.me/${contactInfo.whatsapp}`, '_blank')}
                 >
                   <MessageCircle className="mr-2 h-4 w-4" />
                   WhatsApp Chat
@@ -272,7 +296,7 @@ const Contact = () => {
                 <Button 
                   variant="outline" 
                   className="w-full border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white"
-                  onClick={() => window.open('tel:+919876543210')}
+                  onClick={() => window.open(`tel:${contactInfo.phone ? contactInfo.phone[0] : '+919876543210'}`)}
                 >
                   <Phone className="mr-2 h-4 w-4" />
                   Call Now
@@ -280,7 +304,7 @@ const Contact = () => {
                 <Button 
                   variant="outline" 
                   className="w-full border-amber-600 text-amber-600 hover:bg-amber-600 hover:text-white"
-                  onClick={() => window.open('mailto:info@gmbtravelskashmir.com')}
+                  onClick={() => window.open(`mailto:${contactInfo.email ? contactInfo.email[0] : 'info@gmbtravelskashmir.com'}`)}
                 >
                   <Mail className="mr-2 h-4 w-4" />
                   Send Email
@@ -296,19 +320,19 @@ const Contact = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-amber-600">500+</div>
+                    <div className="text-2xl font-bold text-amber-600">{businessStats.happyCustomers}+</div>
                     <div className="text-sm text-slate-600">Happy Customers</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-amber-600">10+</div>
+                    <div className="text-2xl font-bold text-amber-600">{businessStats.yearsExperience}+</div>
                     <div className="text-sm text-slate-600">Years Experience</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-amber-600">50+</div>
+                    <div className="text-2xl font-bold text-amber-600">{businessStats.tourPackages}+</div>
                     <div className="text-sm text-slate-600">Tour Packages</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-amber-600">24/7</div>
+                    <div className="text-2xl font-bold text-amber-600">{businessStats.supportAvailability}</div>
                     <div className="text-sm text-slate-600">Support</div>
                   </div>
                 </div>
@@ -355,19 +379,31 @@ const Contact = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold text-slate-800 mb-4">Visit Our Office</h3>
-            <p className="text-xl text-slate-600">Located in the heart of Srinagar, Kashmir</p>
+            <p className="text-xl text-slate-600">Located in the heart of {mapSettings.address}</p>
           </div>
           
           <div className="max-w-4xl mx-auto">
             <Card className="shadow-xl border-0 overflow-hidden">
-              <div className="bg-slate-200 h-96 flex items-center justify-center">
-                <div className="text-center text-slate-600">
-                  <MapPin className="h-16 w-16 mx-auto mb-4" />
-                  <h4 className="text-xl font-semibold">Interactive Map</h4>
-                  <p className="mt-2">Map integration would be added here</p>
-                  <p className="text-sm mt-2">Srinagar, Kashmir, India</p>
+              {mapSettings.embedUrl ? (
+                <iframe
+                  src={mapSettings.embedUrl}
+                  className="w-full h-96"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Office Location"
+                ></iframe>
+              ) : (
+                <div className="bg-slate-200 h-96 flex items-center justify-center">
+                  <div className="text-center text-slate-600">
+                    <MapPin className="h-16 w-16 mx-auto mb-4" />
+                    <h4 className="text-xl font-semibold">Interactive Map</h4>
+                    <p className="mt-2">Map integration would be added here</p>
+                    <p className="text-sm mt-2">{mapSettings.address}</p>
+                  </div>
                 </div>
-              </div>
+              )}
             </Card>
           </div>
         </div>
