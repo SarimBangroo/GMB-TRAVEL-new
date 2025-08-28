@@ -38,18 +38,25 @@ class AuthManager:
         return encoded_jwt
 
     @staticmethod
-    def verify_token(token: str) -> dict:
-        """Verify and decode JWT token."""
+    def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+        """Verify JWT token."""
         try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
             username: str = payload.get("sub")
+            user_id: str = payload.get("user_id")
+            role: str = payload.get("role")
             if username is None:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Could not validate credentials",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
-            return payload
+            return {
+                "sub": username,
+                "user_id": user_id,
+                "role": role,
+                "exp": payload.get("exp")
+            }
         except JWTError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
