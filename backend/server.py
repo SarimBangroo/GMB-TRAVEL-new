@@ -1632,11 +1632,11 @@ async def get_whatsapp_templates(
 @api_router.post("/admin/whatsapp/templates", tags=["whatsapp-crm"])
 async def create_whatsapp_template(
     template_data: WhatsAppTemplate,
-    current_admin: dict = Depends(admin_required),
-    db=Depends(get_database)
+    current_admin: dict = Depends(admin_required)
 ):
     """Create a new WhatsApp message template (admin)."""
     try:
+        db = get_database()
         template_dict = template_data.dict()
         template_dict["createdAt"] = datetime.utcnow()
         template_dict["updatedAt"] = datetime.utcnow()
