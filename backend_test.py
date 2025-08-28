@@ -25,7 +25,11 @@ class APITester:
         self.base_url = BASE_URL
         self.session = requests.Session()
         self.admin_token = None
+        self.team_manager_token = None
+        self.team_agent_token = None
         self.test_results = []
+        self.created_team_member_id = None
+        self.created_popup_id = None
         
     def log_test(self, test_name, success, message, response_data=None):
         """Log test results"""
