@@ -257,3 +257,80 @@ class DashboardStats(BaseModel):
     customerReviews: int
     monthlyRevenue: float
     recentBookings: List[Dict[str, Any]]
+
+# Site Settings Models
+class ContactInfo(BaseModel):
+    phone: List[str] = ["+91 98765 43210", "+91 98765 43211"]
+    email: List[str] = ["info@gmbtravelskashmir.com", "bookings@gmbtravelskashmir.com"]
+    address: List[str] = ["Main Office: Srinagar, Kashmir, India", "Branch: Dal Lake Area"]
+    workingHours: List[str] = ["Mon - Sat: 9:00 AM - 8:00 PM", "Sun: 10:00 AM - 6:00 PM"]
+    whatsapp: str = "+919876543210"
+
+class SocialMedia(BaseModel):
+    facebook: str = ""
+    instagram: str = ""
+    twitter: str = ""
+    youtube: str = ""
+    linkedin: str = ""
+
+class CompanyInfo(BaseModel):
+    name: str = "G.M.B Travels Kashmir"
+    tagline: str = "Discover Paradise on Earth"
+    description: str = "Your trusted partner for exploring the magnificent beauty of Kashmir. We create unforgettable experiences that last a lifetime."
+    logo: str = "https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/u7oxyvzc_logo.jpg"
+    aboutText: str = "With years of experience in Kashmir tourism, G.M.B Travels Kashmir has been the trusted companion for travelers seeking authentic experiences in the paradise on earth."
+    missionStatement: str = "We specialize in creating unforgettable journeys through Kashmir's breathtaking landscapes."
+
+class HeroSection(BaseModel):
+    title: str = "Experience the Beauty of"
+    subtitle: str = "Kashmir"
+    description: str = "Discover the pristine valleys, serene lakes, and majestic mountains of Kashmir with our expertly crafted tour packages"
+    backgroundImage: str = "https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/u2wmxitn_pexels-abhilash-mishra-1539700.jpg"
+    ctaButtonText: str = "Explore Packages"
+    secondaryCtaText: str = "Contact Us"
+
+class MapSettings(BaseModel):
+    embedUrl: str = ""
+    latitude: float = 34.0837
+    longitude: float = 74.7973
+    zoomLevel: int = 12
+    address: str = "Srinagar, Kashmir, India"
+
+class SeoSettings(BaseModel):
+    homeTitle: str = "G.M.B Travels Kashmir - Experience Paradise on Earth"
+    homeDescription: str = "Discover Kashmir's beauty with our expertly crafted tour packages. Book your dream vacation today!"
+    homeKeywords: List[str] = ["Kashmir tours", "Kashmir travel", "Dal Lake", "Gulmarg", "Srinagar tours"]
+    siteUrl: str = "https://gmbtravelskashmir.com"
+    ogImage: str = "https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/u2wmxitn_pexels-abhilash-mishra-1539700.jpg"
+
+class BusinessStats(BaseModel):
+    yearsExperience: int = 10
+    happyCustomers: int = 500
+    tourPackages: int = 50
+    supportAvailability: str = "24/7"
+
+class SiteSettings(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    contactInfo: ContactInfo = ContactInfo()
+    socialMedia: SocialMedia = SocialMedia()
+    companyInfo: CompanyInfo = CompanyInfo()
+    heroSection: HeroSection = HeroSection()
+    mapSettings: MapSettings = MapSettings()
+    seoSettings: SeoSettings = SeoSettings()
+    businessStats: BusinessStats = BusinessStats()
+    isActive: bool = True
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
+
+class SiteSettingsUpdate(BaseModel):
+    contactInfo: Optional[ContactInfo] = None
+    socialMedia: Optional[SocialMedia] = None
+    companyInfo: Optional[CompanyInfo] = None
+    heroSection: Optional[HeroSection] = None
+    mapSettings: Optional[MapSettings] = None
+    seoSettings: Optional[SeoSettings] = None
+    businessStats: Optional[BusinessStats] = None
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
