@@ -1744,3 +1744,6 @@ async def get_whatsapp_messages(
     except Exception as e:
         logger.error(f"Get WhatsApp messages error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# Include router in app
+app.include_router(api_router)
