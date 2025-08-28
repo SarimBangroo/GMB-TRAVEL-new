@@ -687,7 +687,7 @@ const AdminSiteSettings = () => {
                 <Input
                   id="seoKeywords"
                   value={settings.seoSettings.homeKeywords.join(', ')}
-                  onChange={(e) => handleInputChange('seoSettings', 'homeKeywords', e.target.value.split(', ').filter(k => k.trim()))}
+                  onChange={(e) => handleInputChange('seoSettings', 'homeKeywords', e.target.value.split(', ').filter(k => k.trim() !== ''))}
                   placeholder="Kashmir tours, Kashmir travel, Dal Lake, Gulmarg"
                 />
               </div>
