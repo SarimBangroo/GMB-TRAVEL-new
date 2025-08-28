@@ -34,6 +34,8 @@ import SEOHead from '../components/SEOHead';
 const BookCab = () => {
   const { siteSettings } = useSiteSettings();
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [bookingForm, setBookingForm] = useState({
     pickupLocation: '',
     dropLocation: '',
@@ -50,116 +52,27 @@ const BookCab = () => {
     specialRequests: ''
   });
 
-  const vehicleTypes = [
-    {
-      id: 'force_urbania',
-      name: 'Force Urbania',
-      model: 'Premium Luxury Van',
-      capacity: '12-16 Passengers',
-      price: 25,
-      priceUnit: 'per km',
-      features: ['Premium AC', 'Captain Seats', 'Entertainment System', 'USB Charging', 'LED Lighting'],
-      specifications: {
-        fuelType: 'Diesel',
-        transmission: 'Manual',
-        mileage: '12 kmpl',
-        luggage: 'Large Boot Space'
-      },
-      image: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=400&h=300&fit=crop',
-      badge: 'Most Popular',
-      badgeColor: 'bg-green-500'
-    },
-    {
-      id: 'innova_crysta',
-      name: 'Toyota Innova Crysta',
-      model: 'Premium MPV',
-      capacity: '6-8 Passengers',
-      price: 18,
-      priceUnit: 'per km',
-      features: ['Dual AC', 'Premium Interiors', 'Push Start', 'Touchscreen', 'Cruise Control'],
-      specifications: {
-        fuelType: 'Diesel/Petrol',
-        transmission: 'Automatic/Manual',
-        mileage: '15 kmpl',
-        luggage: 'Spacious Boot'
-      },
-      image: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=400&h=300&fit=crop',
-      badge: 'Premium Choice',
-      badgeColor: 'bg-blue-500'
-    },
-    {
-      id: 'tempo_traveller',
-      name: 'Tempo Traveller',
-      model: 'Group Transport',
-      capacity: '12-20 Passengers',
-      price: 30,
-      priceUnit: 'per km',
-      features: ['Hi-Roof Design', 'Pushback Seats', 'Music System', 'First Aid Kit', 'Ice Box'],
-      specifications: {
-        fuelType: 'Diesel',
-        transmission: 'Manual',
-        mileage: '10 kmpl',
-        luggage: 'Overhead Storage'
-      },
-      image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&h=300&fit=crop',
-      badge: 'Best for Groups',
-      badgeColor: 'bg-purple-500'
-    },
-    {
-      id: 'mahindra_scorpio',
-      name: 'Mahindra Scorpio',
-      model: 'SUV Adventure',
-      capacity: '7 Passengers',
-      price: 16,
-      priceUnit: 'per km',
-      features: ['4WD Capability', 'High Ground Clearance', 'Powerful Engine', 'Hill Roads Expert'],
-      specifications: {
-        fuelType: 'Diesel',
-        transmission: 'Manual',
-        mileage: '14 kmpl',
-        luggage: 'Good Boot Space'
-      },
-      image: 'https://images.unsplash.com/photo-1549399683-cfa2ec7ea8d6?w=400&h=300&fit=crop',
-      badge: 'Adventure Ready',
-      badgeColor: 'bg-orange-500'
-    },
-    {
-      id: 'sedan_dzire',
-      name: 'Maruti Suzuki Dzire',
-      model: 'Compact Sedan',
-      capacity: '4 Passengers',
-      price: 12,
-      priceUnit: 'per km',
-      features: ['Fuel Efficient', 'Comfortable Ride', 'AC', 'Music System', 'GPS Navigation'],
-      specifications: {
-        fuelType: 'Petrol/CNG',
-        transmission: 'Manual/Automatic',
-        mileage: '22 kmpl',
-        luggage: 'Adequate Boot'
-      },
-      image: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&h=300&fit=crop',
-      badge: 'Economy Choice',
-      badgeColor: 'bg-emerald-500'
-    },
-    {
-      id: 'luxury_fortuner',
-      name: 'Toyota Fortuner',
-      model: 'Luxury SUV',
-      capacity: '7 Passengers',
-      price: 35,
-      priceUnit: 'per km',
-      features: ['Premium Leather', 'Sunroof', 'Advanced Infotainment', '4x4 Drive', 'Premium Sound'],
-      specifications: {
-        fuelType: 'Diesel',
-        transmission: 'Automatic',
-        mileage: '12 kmpl',
-        luggage: 'Premium Boot Space'
-      },
-      image: 'https://images.unsplash.com/photo-1606220838315-056192d5e927?w=400&h=300&fit=crop',
-      badge: 'Luxury Experience',
-      badgeColor: 'bg-yellow-500'
+  // Fetch vehicles from API
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
+
+  const fetchVehicles = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/vehicles`);
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        setVehicleTypes(data.data);
+      } else {
+        console.error('Failed to fetch vehicles');
+      }
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
   const handleInputChange = (field, value) => {
     setBookingForm(prev => ({ ...prev, [field]: value }));
   };
