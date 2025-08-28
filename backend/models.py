@@ -721,3 +721,143 @@ class BlogGenerationSettings(BaseModel):
 
     class Config:
         populate_by_name = True
+
+# Vehicle Management Models
+class VehicleType(str, Enum):
+    force_urbania = "force_urbania"
+    innova_crysta = "innova_crysta" 
+    tempo_traveller = "tempo_traveller"
+    mahindra_scorpio = "mahindra_scorpio"
+    sedan_dzire = "sedan_dzire"
+    luxury_fortuner = "luxury_fortuner"
+
+class FuelType(str, Enum):
+    petrol = "petrol"
+    diesel = "diesel"
+    cng = "cng"
+    hybrid = "hybrid"
+    electric = "electric"
+
+class TransmissionType(str, Enum):
+    manual = "manual"
+    automatic = "automatic"
+    both = "both"
+
+class VehicleSpecifications(BaseModel):
+    fuelType: FuelType
+    transmission: TransmissionType
+    mileage: str
+    luggage: str
+
+class Vehicle(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    vehicleType: VehicleType
+    name: str
+    model: str
+    capacity: str
+    price: float
+    priceUnit: str = "per km"
+    features: List[str] = []
+    specifications: VehicleSpecifications
+    image: str
+    badge: Optional[str] = None
+    badgeColor: str = "bg-blue-500"
+    isActive: bool = True
+    isPopular: bool = False
+    sortOrder: int = 0
+    description: Optional[str] = None
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
+
+class VehicleCreate(BaseModel):
+    vehicleType: VehicleType
+    name: str
+    model: str
+    capacity: str
+    price: float
+    priceUnit: str = "per km"
+    features: List[str] = []
+    specifications: VehicleSpecifications
+    image: str
+    badge: Optional[str] = None
+    badgeColor: str = "bg-blue-500"
+    isActive: bool = True
+    isPopular: bool = False
+    sortOrder: int = 0
+    description: Optional[str] = None
+
+class VehicleUpdate(BaseModel):
+    vehicleType: Optional[VehicleType] = None
+    name: Optional[str] = None
+    model: Optional[str] = None
+    capacity: Optional[str] = None
+    price: Optional[float] = None
+    priceUnit: Optional[str] = None
+    features: Optional[List[str]] = None
+    specifications: Optional[VehicleSpecifications] = None
+    image: Optional[str] = None
+    badge: Optional[str] = None
+    badgeColor: Optional[str] = None
+    isActive: Optional[bool] = None
+    isPopular: Optional[bool] = None
+    sortOrder: Optional[int] = None
+    description: Optional[str] = None
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+# CRM WhatsApp Integration Models  
+class WhatsAppMessage(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    clientId: str
+    phoneNumber: str
+    message: str
+    messageType: str = "text"  # text, image, document, etc.
+    direction: str  # inbound, outbound
+    status: str = "sent"  # sent, delivered, read, failed
+    templateName: Optional[str] = None  # for template messages
+    templateData: Optional[Dict[str, Any]] = None
+    scheduledFor: Optional[datetime] = None
+    sentAt: Optional[datetime] = None
+    deliveredAt: Optional[datetime] = None
+    readAt: Optional[datetime] = None
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
+
+class WhatsAppTemplate(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    name: str
+    category: str  # welcome, booking_confirmation, follow_up, promotional
+    message: str
+    variables: List[str] = []  # {{client_name}}, {{package_name}}, etc.
+    isActive: bool = True
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
+
+class WhatsAppConfig(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), alias="_id")
+    isEnabled: bool = False
+    phoneNumber: str
+    apiToken: Optional[str] = None
+    webhookUrl: Optional[str] = None
+    autoReplyEnabled: bool = False
+    autoReplyMessage: str = "Thank you for contacting G.M.B Travels Kashmir! We'll get back to you soon."
+    businessHours: Dict[str, Any] = {
+        "enabled": True,
+        "start": "09:00",
+        "end": "18:00",
+        "timezone": "Asia/Kolkata",
+        "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+    }
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+    class Config:
+        populate_by_name = True
