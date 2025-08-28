@@ -222,8 +222,8 @@ class APITester:
             if response.status_code == 200:
                 data = response.json()
                 
-                if "id" in data and data.get("fullName") == "Test Employee":
-                    self.created_team_member_id = data["id"]
+                if ("id" in data or "_id" in data) and data.get("fullName") == "Test Employee":
+                    self.created_team_member_id = data.get("id") or data.get("_id")
                     self.log_test("Admin Create Team Member", True, f"Successfully created team member with ID: {self.created_team_member_id}")
                     return True
                 else:
