@@ -1726,11 +1726,11 @@ async def send_whatsapp_message(
 async def get_whatsapp_messages(
     client_id: Optional[str] = Query(None, description="Filter by client ID"),
     limit: int = Query(50, description="Number of messages to return"),
-    current_admin: dict = Depends(admin_required),
-    db=Depends(get_database)
+    current_admin: dict = Depends(admin_required)
 ):
     """Get WhatsApp messages (admin)."""
     try:
+        db = get_database()
         filter_criteria = {}
         if client_id:
             filter_criteria["clientId"] = client_id
