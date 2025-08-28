@@ -279,7 +279,7 @@ const Blog = () => {
                     />
                     <div className="absolute top-4 left-4">
                       <Badge variant="outline" className="bg-white/90 text-slate-800">
-                        {post.category}
+                        {post.category.replace('_', ' ')}
                       </Badge>
                     </div>
                     {post.isAIGenerated && (
