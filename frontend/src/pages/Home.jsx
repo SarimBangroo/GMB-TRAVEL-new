@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { mockData } from '../mock';
 import { useSiteSettings } from '../hooks/useSiteSettings';
+import SEOHead from '../components/SEOHead';
 
 const Home = () => {
   const { siteSettings } = useSiteSettings();
