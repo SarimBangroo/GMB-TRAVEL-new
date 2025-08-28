@@ -116,6 +116,7 @@ function App() {
               <Route path="/admin/popups" element={<AdminPopups />} />
               <Route path="/admin/blog" element={<AdminBlog />} />
               <Route path="/admin/vehicles" element={<AdminVehicles />} />
+              <Route path="/admin/media" element={<AdminMediaManager />} />
             </Routes>
             <Toaster />
           </SiteSettingsProvider>
