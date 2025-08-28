@@ -64,18 +64,32 @@ class AuthManager:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-def get_current_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Dependency to get current authenticated admin."""
-    token = credentials.credentials
-    payload = AuthManager.verify_token(token)
-    return payload
-
-# Admin authentication middleware
-async def admin_required(current_admin: dict = Depends(get_current_admin)):
-    """Ensure the user is an authenticated admin."""
-    if not current_admin:
+# Dependency for admin-only routes
+async def admin_required(token_data: dict = Depends(AuthManager.verify_token)):
+    """Ensure user is admin."""
+    if token_data.get("role") not in ["admin"]:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Admin authentication required"
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
         )
-    return current_admin
+    return token_data
+
+# Dependency for manager-level access (admin or manager)
+async def manager_required(token_data: dict = Depends(AuthManager.verify_token)):
+    """Ensure user is admin or manager."""
+    if token_data.get("role") not in ["admin", "manager"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Manager access required"
+        )
+    return token_data
+
+# Dependency for any team member access
+async def team_member_required(token_data: dict = Depends(AuthManager.verify_token)):
+    """Ensure user is a team member."""
+    if token_data.get("role") not in ["admin", "manager", "agent"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Team member access required"
+        )
+    return token_data
