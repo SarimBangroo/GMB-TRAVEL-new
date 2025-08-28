@@ -1451,11 +1451,11 @@ async def get_vehicles(
 
 @api_router.get("/admin/vehicles", tags=["admin-vehicles"])
 async def get_admin_vehicles(
-    current_admin: dict = Depends(admin_required),
-    db=Depends(get_database)
+    current_admin: dict = Depends(admin_required)
 ):
     """Get all vehicles for admin management."""
     try:
+        db = get_database()
         vehicles_cursor = db.vehicles.find({})
         vehicles = await vehicles_cursor.sort("sortOrder", 1).to_list(length=100)
         
