@@ -34,80 +34,12 @@ const Blog = () => {
   const fetchBlogPosts = async () => {
     try {
       setIsLoading(true);
-      // Mock data for now - replace with actual API call
-      const mockPosts = [
-        {
-          id: '1',
-          title: 'Best Time to Visit Kashmir: A Complete Seasonal Guide',
-          excerpt: 'Discover when to plan your Kashmir trip for the perfect weather, activities, and experiences. From spring blossoms to winter snow, each season offers unique attractions.',
-          content: 'Kashmir, often called "Paradise on Earth," offers different experiences throughout the year...',
-          author: 'Travel Writer',
-          authorAvatar: null,
-          publishedDate: '2024-11-25T10:30:00Z',
-          category: 'Travel Tips',
-          tags: ['Kashmir', 'Travel Planning', 'Seasonal Guide', 'Weather'],
-          readTime: '8 min',
-          views: 1245,
-          featured: true,
-          image: 'https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/u2wmxitn_pexels-abhilash-mishra-1539700.jpg',
-          status: 'published',
-          isAIGenerated: false
-        },
-        {
-          id: '2',
-          title: 'Houseboat Experience on Dal Lake: A Floating Paradise',
-          excerpt: 'Experience the magic of staying in traditional Kashmiri houseboats on Dal Lake. Learn about amenities, booking tips, and what makes this accommodation so special.',
-          content: 'The houseboats of Dal Lake offer one of the worlds most unique accommodation experiences...',
-          author: 'AI Content Generator',
-          authorAvatar: null,
-          publishedDate: '2024-11-24T15:45:00Z',
-          category: 'Accommodation',
-          tags: ['Dal Lake', 'Houseboats', 'Unique Stay', 'Srinagar'],
-          readTime: '6 min',
-          views: 892,
-          featured: false,
-          image: 'https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/1ff3rziy_pexels-farhaan-mushtaq-parimoo-13671454.jpg',
-          status: 'published',
-          isAIGenerated: true
-        },
-        {
-          id: '3',
-          title: 'Adventure Activities in Gulmarg: Beyond Skiing',
-          excerpt: 'Explore the adventure opportunities in Gulmarg beyond winter skiing. From gondola rides to trekking and golf, discover year-round activities.',
-          content: 'Gulmarg, the "Meadow of Flowers," is renowned for skiing but offers much more...',
-          author: 'AI Content Generator',
-          authorAvatar: null,
-          publishedDate: '2024-11-23T09:15:00Z',
-          category: 'Adventure',
-          tags: ['Gulmarg', 'Adventure Sports', 'Skiing', 'Trekking'],
-          readTime: '7 min',
-          views: 654,
-          featured: false,
-          image: 'https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/bm97gdwu_pexels-azam-khan-12040331.jpg',
-          status: 'published',
-          isAIGenerated: true
-        },
-        {
-          id: '4',
-          title: 'Kashmir Photography Guide: Capturing Paradise',
-          excerpt: 'Master the art of Kashmir photography with our comprehensive guide. Best locations, timing, equipment recommendations, and composition tips.',
-          content: 'Kashmir offers endless photography opportunities for both amateur and professional photographers...',
-          author: 'Photography Expert',
-          authorAvatar: null,
-          publishedDate: '2024-11-22T14:20:00Z',
-          category: 'Photography',
-          tags: ['Photography', 'Kashmir', 'Landscape', 'Tips'],
-          readTime: '10 min',
-          views: 1105,
-          featured: true,
-          image: 'https://customer-assets.emergentagent.com/job_gmb-tours/artifacts/rudsgdbz_pexels-azeen-shah-10542627.jpg',
-          status: 'published',
-          isAIGenerated: false
-        }
-      ];
-      setPosts(mockPosts);
+      const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/blog/posts`);
+      setPosts(response.data);
     } catch (error) {
       console.error('Failed to fetch blog posts:', error);
+      // Fallback to empty array if API fails
+      setPosts([]);
     } finally {
       setIsLoading(false);
     }
