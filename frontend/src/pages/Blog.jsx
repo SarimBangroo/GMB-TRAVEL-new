@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Star
 } from 'lucide-react';
+import axios from 'axios';
 
 const Blog = () => {
   const [posts, setPosts] = useState([]);
