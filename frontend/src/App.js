@@ -114,6 +114,7 @@ function App() {
               <Route path="/admin/site-settings" element={<AdminSiteSettings />} />
               <Route path="/admin/popups" element={<AdminPopups />} />
               <Route path="/admin/blog" element={<AdminBlog />} />
+              <Route path="/admin/vehicles" element={<AdminVehicles />} />
             </Routes>
             <Toaster />
           </SiteSettingsProvider>
