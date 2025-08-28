@@ -519,7 +519,7 @@ class APITester:
                 
                 if response.status_code == 200:
                     popups = response.json()
-                    popup_found = any(popup.get("id") == self.created_popup_id for popup in popups)
+                    popup_found = any(popup.get("id") == self.created_popup_id or popup.get("_id") == self.created_popup_id for popup in popups)
                     
                     if popup_found:
                         self.log_test("Integration Flow", True, "Created popup successfully appears in public endpoint")
